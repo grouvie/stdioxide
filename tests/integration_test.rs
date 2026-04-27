@@ -295,8 +295,8 @@ impl TestForwarder {
 impl Drop for TestForwarder {
     fn drop(&mut self) {
         // Clean up: kill the process if it’s still running.
-        let _ = self.process.kill();
-        let _ = self.process.wait();
+        drop(self.process.kill());
+        drop(self.process.wait());
     }
 }
 
@@ -447,7 +447,7 @@ fn test_default_port_values() {
         let error_message = format!(
             "TEST SETUP FAILED: Default port {port} is not available. This is an environment issue, not a test failure."
         );
-        let _ = TcpListener::bind(format!("127.0.0.1:{port}")).expect(&error_message);
+        drop(TcpListener::bind(format!("127.0.0.1:{port}")).expect(&error_message));
         // Port is immediately released here.
     }
 
@@ -495,8 +495,8 @@ fn test_default_port_values() {
     }
 
     // Clean up.
-    let _ = process.kill();
-    let _ = process.wait();
+    drop(process.kill());
+    drop(process.wait());
 }
 
 #[test]
@@ -562,8 +562,8 @@ fn test_port_override_via_environment_variables() {
     );
 
     // Clean up.
-    let _ = process.kill();
-    let _ = process.wait();
+    drop(process.kill());
+    drop(process.wait());
 }
 
 #[test]
@@ -847,7 +847,7 @@ fn test_stderr_port_reconnect_continues_from_current_state() {
         assert!(output_str.contains("before_connection"));
         assert!(output_str.contains("during_first_connection"));
         // Disconnect now (at ~t=1.0s), before "trigger_disconnect" (at t=1.5s)
-        let _ = stream.shutdown(std::net::Shutdown::Both);
+        drop(stream.shutdown(std::net::Shutdown::Both));
         drop(stream);
         assert!(
             !output_str.contains("trigger_disconnect"),

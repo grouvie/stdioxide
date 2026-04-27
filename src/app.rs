@@ -27,14 +27,14 @@ pub fn run(args: Args) -> Result<(), anyhow::Error> {
     {
         let stdout_state = Arc::clone(&stdout_state);
         thread::spawn(move || {
-            let _ = pump_output_to_state(child.stdout, stdout_state, "stdout");
+            drop(pump_output_to_state(child.stdout, stdout_state, "stdout"));
         });
     }
 
     {
         let stderr_state = Arc::clone(&stderr_state);
         thread::spawn(move || {
-            let _ = pump_output_to_state(child.stderr, stderr_state, "stderr");
+            drop(pump_output_to_state(child.stderr, stderr_state, "stderr"));
         });
     }
 
@@ -42,7 +42,12 @@ pub fn run(args: Args) -> Result<(), anyhow::Error> {
         let stdout_state = Arc::clone(&stdout_state);
         let control_tx = control_tx.clone();
         thread::spawn(move || {
-            let _ = protocol_server(protocol_listener, stdout_state, child.stdin, control_tx);
+            drop(protocol_server(
+                protocol_listener,
+                stdout_state,
+                child.stdin,
+                control_tx,
+            ));
         });
     }
 
@@ -50,7 +55,7 @@ pub fn run(args: Args) -> Result<(), anyhow::Error> {
         let stderr_state = Arc::clone(&stderr_state);
         let control_tx = control_tx.clone();
         thread::spawn(move || {
-            let _ = stderr_server(stderr_listener, stderr_state, control_tx);
+            drop(stderr_server(stderr_listener, stderr_state, control_tx));
         });
     }
 
@@ -60,7 +65,7 @@ pub fn run(args: Args) -> Result<(), anyhow::Error> {
 
     {
         thread::spawn(move || {
-            let _ = health_server(health_listener);
+            drop(health_server(health_listener));
         });
     }
 

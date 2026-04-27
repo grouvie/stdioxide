@@ -19,7 +19,7 @@ pub fn run_child_coordinator(
 
         match control_rx.recv_timeout(std::time::Duration::from_millis(100)) {
             Ok(ControlMessage::KillChild) => {
-                let _ = job.kill();
+                drop(job.kill());
                 let status = job.wait()?;
                 eprintln!("Child process killed; exit status: {status}");
                 return Ok(());
@@ -30,7 +30,7 @@ pub fn run_child_coordinator(
             Err(mpsc::RecvTimeoutError::Disconnected) => {
                 // All senders are gone; we terminate the child process and exit.
                 eprintln!("Control channel disconnected; terminating child process");
-                let _ = job.kill();
+                drop(job.kill());
                 let status = job.wait()?;
                 eprintln!("Child process killed; exit status: {status}");
                 return Ok(());

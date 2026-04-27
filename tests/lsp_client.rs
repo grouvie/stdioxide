@@ -193,9 +193,9 @@ impl LspClient {
 impl Drop for LspClient {
     fn drop(&mut self) {
         // Automatically send exit notification when the client is dropped.
-        let _ = self.send_message(&serde_json::json!({
+        drop(self.send_message(&serde_json::json!({
             "jsonrpc": "2.0",
             "method": "exit"
-        }));
+        })));
     }
 }

@@ -60,20 +60,20 @@ pub fn protocol_server(
             let cloned_control_tx = control_tx.clone();
             (
                 thread::spawn(move || {
-                    let _ = forward_stream_data_to_child_process(
+                    drop(forward_stream_data_to_child_process(
                         cloned_stream,
                         child_stdin,
                         cloned_control_tx,
-                    );
+                    ));
                 }),
                 thread::spawn(move || {
-                    let _ = serve_output_on_stream(
+                    drop(serve_output_on_stream(
                         stream,
                         Arc::clone(&stdout_state),
                         control_tx,
                         ServingBehavior::KillChildOnDisconnect,
                         "protocol",
-                    );
+                    ));
                 }),
             )
         }

@@ -82,15 +82,15 @@ pub fn stderr_server(
 
                     // Spawn read monitoring thread to detect disconnection proactively.
                     thread::spawn(move || {
-                        let _ = monitor_stderr_client_connection(
+                        drop(monitor_stderr_client_connection(
                             connection_monitoring_stream,
                             has_active_connection_monitor,
-                        );
+                        ));
                     });
 
                     // Spawn write thread to serve stderr output.
                     thread::spawn(move || {
-                        let _ = serve_output_on_stream(
+                        drop(serve_output_on_stream(
                             stream,
                             stderr_state,
                             control_tx,
@@ -98,7 +98,7 @@ pub fn stderr_server(
                                 &has_active_connection_write,
                             )),
                             "stderr",
-                        );
+                        ));
                         // When the write thread finishes, also clear the connection flag
                         // (idempotent if the read thread already did this).
                         has_active_connection_clone.store(false, Ordering::Release);
