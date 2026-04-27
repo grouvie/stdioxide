@@ -7,6 +7,13 @@ use std::{
     time::Duration,
 };
 
+// Acknowledge available dev-dependencies not used in this test file.
+use anyhow as _;
+use clap as _;
+use lsp_types as _;
+use stdioxide as _;
+use subprocess as _;
+
 /// RAII wrapper for LSP communication over a TCP stream.
 /// Automatically sends the exit notification when dropped.
 pub struct LspClient {

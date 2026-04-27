@@ -21,10 +21,11 @@
 //! app::run(args).expect("Failed to run stdioxide");
 //! ```
 
-/// Application entry point and main event loop.
-///
-/// Contains the `run()` function that orchestrates TCP listeners, child process management,
-/// and output streaming threads.
+#![allow(
+    unused_crate_dependencies,
+    reason = "dev-dependencies available to lib tests"
+)]
+
 pub mod app;
 
 /// Command-line argument parsing and configuration.
