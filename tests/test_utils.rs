@@ -7,6 +7,11 @@
 //! The goal is to make integration tests work on all platforms without #[cfg(not(windows))]
 //! guards scattered throughout the test code.
 
+#![allow(
+    unreachable_pub,
+    reason = "Private test module, but items need `pub` for parent access"
+)]
+
 // Acknowledge available dev-dependencies not used in this test file.
 use anyhow as _;
 use clap as _;

@@ -33,7 +33,7 @@ pub mod app;
 /// Defines the `Args` struct with port configurations and child process command.
 pub mod args;
 
-mod child;
-mod control;
-mod output;
-mod servers;
+pub(crate) mod child;
+pub(crate) mod control;
+pub(crate) mod output;
+pub(crate) mod servers;

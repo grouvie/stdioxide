@@ -51,7 +51,7 @@ fn monitor_stderr_client_connection(
 /// to the first client that connects. If that client disconnects, we wait for the next client to connect
 /// and serve the current `stderr` output to them instead, and so on. The function spawns two threads
 /// for each client connection: one for monitoring disconnection and one for writing output.
-pub fn stderr_server(
+pub(crate) fn stderr_server(
     listener: TcpListener,
     stderr_state: Arc<NotifyableOutputState>,
     control_tx: mpsc::Sender<ControlMessage>,

@@ -16,6 +16,10 @@ use crate::control::ControlMessage;
 
 /// Defines how output serving should handle client disconnection.
 #[derive(Debug, Clone)]
+#[expect(
+    clippy::redundant_pub_crate,
+    reason = "Linting conflict with `rustc::unreachable_pub`."
+)]
 pub(crate) enum ServingBehavior {
     /// Kill the child process when the client disconnects (protocol port behavior).
     KillChildOnDisconnect,
@@ -26,6 +30,10 @@ pub(crate) enum ServingBehavior {
 }
 
 /// Buffered output state from a child process stream.
+#[expect(
+    clippy::redundant_pub_crate,
+    reason = "Linting conflict with `rustc::unreachable_pub`."
+)]
 pub(crate) struct OutputState {
     /// Accumulated output bytes not yet sent to clients.
     pub buffer: Vec<u8>,
@@ -34,6 +42,10 @@ pub(crate) struct OutputState {
 }
 
 /// Thread-safe output state with condition variable for synchronization.
+#[expect(
+    clippy::redundant_pub_crate,
+    reason = "Linting conflict with `rustc::unreachable_pub`."
+)]
 pub(crate) struct NotifyableOutputState {
     /// Protected output buffer and EOF flag.
     pub state: Mutex<OutputState>,
@@ -63,6 +75,10 @@ impl Default for NotifyableOutputState {
 /// Pumps data from the given `source` (either `stdout` or `stderr` of the child process) into the shared `state`.
 ///
 /// Continuously reads from the source and appends to the buffer, notifying waiters on each read.
+#[expect(
+    clippy::redundant_pub_crate,
+    reason = "Linting conflict with `rustc::unreachable_pub`."
+)]
 pub(crate) fn pump_output_to_state(
     mut source: impl Read,
     output_state: Arc<NotifyableOutputState>,
@@ -96,6 +112,10 @@ pub(crate) fn pump_output_to_state(
 ///
 /// Waits for output to become available, then writes it to the TCP stream.
 /// Handles disconnection according to the specified `serving_behavior`.
+#[expect(
+    clippy::redundant_pub_crate,
+    reason = "Linting conflict with `rustc::unreachable_pub`."
+)]
 pub(crate) fn serve_output_on_stream(
     mut stream: TcpStream,
     output_state: Arc<NotifyableOutputState>,

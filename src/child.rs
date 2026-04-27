@@ -3,7 +3,11 @@
 use subprocess::{Exec, Job, Redirection};
 
 /// A spawned child process with captured `stdin`, `stdout`, and `stderr` streams.
-pub struct StartedChild {
+#[expect(
+    clippy::redundant_pub_crate,
+    reason = "Linting conflict with `rustc::unreachable_pub`."
+)]
+pub(crate) struct StartedChild {
     /// The subprocess `Job` handle for process lifecycle management.
     pub job: Job,
     /// File handle for writing to the child’s `stdin`.
@@ -18,7 +22,7 @@ impl StartedChild {
     /// Spawns a child process with the given command and arguments.
     ///
     /// All three standard streams (`stdin`, `stdout`, `stderr`) are captured as pipes.
-    pub fn start(command: &str, args: &[String]) -> Result<Self, anyhow::Error> {
+    pub(crate) fn start(command: &str, args: &[String]) -> Result<Self, anyhow::Error> {
         let mut process = Exec::cmd(command);
         for arg in args {
             process = process.arg(arg);

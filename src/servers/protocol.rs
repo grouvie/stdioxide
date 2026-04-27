@@ -53,7 +53,7 @@ fn forward_stream_data_to_child_process(
 /// client and the child process. This function spawns two threads: one for forwarding data from
 /// the client to the child process’s `stdin`, and another for forwarding data from the child
 /// process’s `stdout` to the client.
-pub fn protocol_server(
+pub(crate) fn protocol_server(
     listener: TcpListener,
     stdout_state: Arc<NotifyableOutputState>,
     child_stdin: std::fs::File,

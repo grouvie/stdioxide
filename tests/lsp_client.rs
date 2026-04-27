@@ -1,5 +1,10 @@
 //! Test utilities for LSP client communication.
 
+#![allow(
+    unreachable_pub,
+    reason = "Private test module, but items need `pub` for parent access"
+)]
+
 use std::{
     io::{Read, Write},
     net::TcpStream,
