@@ -315,7 +315,13 @@ pub fn numbered_output_loop_cmd(count: u32, interval_ms: u32) -> (&'static str, 
 #[cfg(not(windows))]
 #[must_use]
 pub fn numbered_output_loop_cmd(count: u32, interval_ms: u32) -> (&'static str, Vec<String>) {
-    let interval_sec = interval_ms as f32 / 1000.0;
+    #[expect(
+        clippy::integer_division,
+        reason = "Intentional conversion of milliseconds to seconds with fractional part"
+    )]
+    let seconds = interval_ms / 1000;
+    let millis = interval_ms % 1000;
+    let interval_sec = format!("{seconds}.{millis:03}");
     (
         "bash",
         vec![
@@ -455,12 +461,18 @@ pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) 
 #[cfg(not(windows))]
 #[must_use]
 pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) {
-    let sleep_sec = sleep_ms as f32 / 1000.0;
+    #[expect(
+        clippy::integer_division,
+        reason = "Intentional conversion of milliseconds to seconds with fractional part"
+    )]
+    let seconds = sleep_ms / 1000;
+    let millis = sleep_ms % 1000;
+    let sleep_arg = format!("{seconds}.{millis:03}");
     (
         "bash",
         vec![
             "-c".to_string(),
-            format!("echo {} && sleep {}", msg, sleep_sec),
+            format!("echo {} && sleep {}", msg, sleep_arg),
         ],
     )
 }

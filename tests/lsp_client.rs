@@ -69,7 +69,7 @@ impl LspClient {
         // Read until we find "\r\n\r\n"
         loop {
             self.stream.read_exact(&mut buffer)?;
-            header.push(buffer[0] as char);
+            header.push(buffer[0].into());
             if header.ends_with("\r\n\r\n") {
                 break;
             }
