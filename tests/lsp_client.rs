@@ -64,7 +64,7 @@ impl LspClient {
     fn read_message(&mut self) -> anyhow::Result<serde_json::Value> {
         // Read the Content-Length header.
         let mut header = String::new();
-        let mut buffer = [0u8; 1];
+        let mut buffer = [0_u8; 1];
 
         // Read until we find "\r\n\r\n"
         loop {
@@ -88,7 +88,7 @@ impl LspClient {
             .ok_or_else(|| anyhow::anyhow!("Missing Content-Length"))?;
 
         // Read the JSON content.
-        let mut content = vec![0u8; content_length];
+        let mut content = vec![0_u8; content_length];
         self.stream.read_exact(&mut content)?;
 
         // Parse JSON.
@@ -103,7 +103,7 @@ impl LspClient {
         params: serde_json::Value,
     ) -> Result<i32, anyhow::Error> {
         let request_id = self.next_request_id;
-        self.next_request_id += 1;
+        self.next_request_id += 1_i32;
 
         let request = serde_json::json!({
             "jsonrpc": "2.0",
@@ -137,7 +137,7 @@ impl LspClient {
     /// Read responses until we get a response with the specified ID.
     /// Skips notifications that may arrive in between.
     fn read_response(&mut self, expected_id: i32) -> anyhow::Result<serde_json::Value> {
-        for _ in 0..20 {
+        for _ in 0_usize..20_usize {
             match self.read_message() {
                 Ok(msg) => {
                     // Check if this is our response.
@@ -196,7 +196,7 @@ impl LspClient {
             "textDocument": {
                 "uri": uri,
                 "languageId": language_id,
-                "version": 1,
+                "version": 1_i32,
                 "text": text
             }
         });

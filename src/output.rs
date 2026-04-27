@@ -85,7 +85,7 @@ pub(crate) fn pump_output_to_state(
     label: &'static str,
 ) -> Result<(), anyhow::Error> {
     loop {
-        let mut buffer = [0u8; 8192];
+        let mut buffer = [0_u8; 8192];
         let num_bytes_read = source.read(&mut buffer)?;
         {
             let mut guard = output_state.state.lock().map_err(|error| {
@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn test_pump_output_to_state_multiple_chunks() -> Result<(), anyhow::Error> {
         let state = Arc::new(NotifyableOutputState::new());
-        let data = vec![0u8; 16384]; // Larger than buffer size (8192).
+        let data = vec![0_u8; 16384]; // Larger than buffer size (8192).
         let input = Cursor::new(data.clone());
 
         pump_output_to_state(input, Arc::clone(&state), "test")?;

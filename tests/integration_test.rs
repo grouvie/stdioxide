@@ -332,7 +332,7 @@ fn read_with_timeout(stream: &mut TcpStream, buffer: &mut [u8]) -> io::Result<us
 /// Helper function to read all available data from a stream up to a timeout.
 fn read_all_available(stream: &mut TcpStream, timeout: Duration) -> Result<Vec<u8>, anyhow::Error> {
     let mut result = Vec::new();
-    let mut buffer = [0u8; 8192];
+    let mut buffer = [0_u8; 8192];
     stream
         .set_read_timeout(Some(timeout))
         .map_err(|error| anyhow::anyhow!("Failed to set read timeout: {error}"))?;
@@ -471,7 +471,7 @@ fn test_default_port_values() -> Result<(), anyhow::Error> {
 
     // Test setup: Ensure default ports are available.
     // If they’re not, this is an environment issue, not a test failure.
-    for port in 7000..=7002 {
+    for port in 7000_u16..=7002_u16 {
         let error_message = format!(
             "TEST SETUP FAILED: Default port {port} is not available. This is an environment issue, not a test failure."
         );
@@ -517,7 +517,7 @@ fn test_default_port_values() -> Result<(), anyhow::Error> {
     );
 
     // Verify we can connect to all three default ports.
-    for port in 7000..=7002 {
+    for port in 7000_u16..=7002_u16 {
         assert!(
             TcpStream::connect(format!("127.0.0.1:{port}")).is_ok(),
             "Should connect to default port {port}"
@@ -699,7 +699,7 @@ fn test_protocol_port_single_client_only() -> Result<(), anyhow::Error> {
         .set_read_timeout(Some(Duration::from_millis(200)))
         .map_err(|error| anyhow::anyhow!("Should set read timeout: {error}"))?;
 
-    let mut buf = [0u8; 100];
+    let mut buf = [0_u8; 100];
     let result = stream2.read(&mut buf);
 
     assert!(
@@ -996,10 +996,10 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
     let health_port = forwarder.ports.health_port();
     let health_check_handle = thread::spawn(move || {
         let start = Instant::now();
-        let mut check_count = 0;
+        let mut check_count = 0_usize;
         while start.elapsed() < Duration::from_millis(3500) {
             if TcpStream::connect(("127.0.0.1", health_port)).is_ok() {
-                check_count += 1;
+                check_count += 1_usize;
             }
             thread::sleep(Duration::from_millis(20));
         }
@@ -1010,7 +1010,7 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
     let mut protocol_stream = forwarder.connect_protocol()?;
     let protocol_handle = thread::spawn(move || {
         let mut all_output = Vec::new();
-        let mut buffer = [0u8; 8192];
+        let mut buffer = [0_u8; 8192];
         protocol_stream
             .set_read_timeout(Some(Duration::from_secs(4)))
             .ok();
@@ -1031,7 +1031,7 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
     let mut stderr_stream = forwarder.connect_stderr()?;
     let stderr_handle = thread::spawn(move || {
         let mut all_output = Vec::new();
-        let mut buffer = [0u8; 8192];
+        let mut buffer = [0_u8; 8192];
         stderr_stream
             .set_read_timeout(Some(Duration::from_secs(4)))
             .ok();
@@ -1175,8 +1175,8 @@ fn test_large_output_buffering() -> Result<(), anyhow::Error> {
 
     // Connect and read the buffered output.
     let mut stream = forwarder.connect_protocol()?;
-    let mut total_read = 0;
-    let mut buffer = [0u8; 8192];
+    let mut total_read = 0_usize;
+    let mut buffer = [0_u8; 8192];
 
     while total_read < large_size {
         match read_with_timeout(&mut stream, &mut buffer) {
@@ -1204,7 +1204,7 @@ fn test_concurrent_stdin_stdout_bidirectional() -> Result<(), anyhow::Error> {
     let mut stream = forwarder.connect_protocol()?;
 
     // Send multiple lines and verify echo.
-    for i in 0..5 {
+    for i in 0_usize..5_usize {
         let message = format!("line {i}\n");
         stream
             .write_all(message.as_bytes())

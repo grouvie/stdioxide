@@ -25,7 +25,7 @@ fn monitor_stderr_client_connection(
     mut stream: TcpStream,
     has_active_connection: Arc<AtomicBool>,
 ) -> Result<(), anyhow::Error> {
-    let mut read_buffer = [0u8; 1];
+    let mut read_buffer = [0_u8; 1];
     loop {
         match stream.read(&mut read_buffer) {
             Ok(0) => {

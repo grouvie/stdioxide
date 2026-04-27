@@ -24,7 +24,7 @@ fn forward_stream_data_to_child_process(
     mut child_stdin: fs::File,
     control_tx: mpsc::Sender<ControlMessage>,
 ) -> Result<(), anyhow::Error> {
-    let mut read_buffer = [0u8; 8192];
+    let mut read_buffer = [0_u8; 8192];
     loop {
         let num_bytes_read = match stream.read(&mut read_buffer) {
             Ok(0) => {
