@@ -7,7 +7,6 @@
     reason = "The binary depends on subprocess transitively through the stdioxide library"
 )]
 
-use clap::Parser;
 use stdioxide::{app, args::Args};
 
 fn main() -> Result<(), anyhow::Error> {
