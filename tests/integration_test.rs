@@ -1182,9 +1182,8 @@ fn test_large_output_buffering() -> Result<(), anyhow::Error> {
 
     while total_read < large_size {
         match read_with_timeout(&mut stream, &mut buffer) {
-            Ok(0) => break,
+            Ok(0) | Err(_) => break,
             Ok(n) => total_read += n,
-            Err(_) => break,
         }
     }
 
