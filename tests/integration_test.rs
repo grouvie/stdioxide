@@ -6,7 +6,15 @@
 )]
 
 use std::{
-    collections::HashSet, env, fs::read_to_string, io::{self, Read, Write}, net::{Shutdown, TcpListener, TcpStream}, process::{Child, Command, Stdio}, sync::{LazyLock, Mutex}, thread, time::{Duration, Instant}
+    collections::HashSet,
+    env,
+    fs::read_to_string,
+    io::{self, Read, Write},
+    net::{Shutdown, TcpListener, TcpStream},
+    process::{Child, Command, Stdio},
+    sync::{LazyLock, Mutex},
+    thread,
+    time::{Duration, Instant},
 };
 
 // Acknowledge available dev-dependencies not used in this test file.
@@ -187,14 +195,14 @@ impl TestForwarder {
         ports: AllocatedPorts,
     ) -> Result<Self, String> {
         let process = Self::spawn_process(command, args, &ports)
-            .map_err(|e| format!("Failed to spawn process: {}", e))?;
+            .map_err(|error| format!("Failed to spawn process: {error}"))?;
 
         let forwarder = Self { process, ports };
 
         // Wait for the forwarder to bind to the ports
         forwarder
             .try_wait_for_ready()
-            .map_err(|e| format!("Failed to become ready: {}", e))?;
+            .map_err(|error| format!("Failed to become ready: {error}"))?;
 
         // Ports remain in the forwarder and will be released when it’s dropped.
         Ok(forwarder)
@@ -202,11 +210,7 @@ impl TestForwarder {
 
     /// Internal helper to spawn the forwarder process.
     /// Returns the spawned Child process or an error if spawning fails (e.g., due to port conflicts).
-    fn spawn_process(
-        command: &str,
-        args: &[&str],
-        ports: &AllocatedPorts,
-    ) -> io::Result<Child> {
+    fn spawn_process(command: &str, args: &[&str], ports: &AllocatedPorts) -> io::Result<Child> {
         // Get the path to the `stdioxide` binary.
         // In integration tests, we need to use the binary from the target directory.
         let bin_path = env::var("CARGO_BIN_EXE_stdioxide")
@@ -560,7 +564,7 @@ fn test_port_override_via_environment_variables() -> Result<(), anyhow::Error> {
     const NUM_ATTEMPTS: usize = 30;
     for _ in 0..NUM_ATTEMPTS {
         if TcpStream::connect_timeout(
-            &format!("127.0.0.1:{}", custom_health).parse().unwrap(),
+            &format!("127.0.0.1:{custom_health}").parse()?,
             Duration::from_millis(100),
         )
         .is_ok()
@@ -572,8 +576,7 @@ fn test_port_override_via_environment_variables() -> Result<(), anyhow::Error> {
     }
     assert!(
         connected,
-        "Forwarder should be ready on custom health port {}",
-        custom_health
+        "Forwarder should be ready on custom health port {custom_health}",
     );
 
     // Verify we can connect to all three custom ports.
@@ -919,20 +922,17 @@ fn test_stderr_port_reconnect_continues_from_current_state() -> Result<(), anyho
 
         assert!(
             output_str.contains("trigger_disconnect"),
-            "Second client should receive 'trigger_disconnect' (buffered during disconnect), got: {}",
-            output_str
+            "Second client should receive 'trigger_disconnect' (buffered during disconnect), got: {output_str}",
         );
 
         assert!(
             output_str.contains("while_disconnected"),
-            "Second client should receive 'while_disconnected' (buffered during disconnect), got: {}",
-            output_str
+            "Second client should receive 'while_disconnected' (buffered during disconnect), got: {output_str}",
         );
 
         assert!(
             output_str.contains("during_second_connection"),
-            "Second client should receive realtime data, got: {}",
-            output_str
+            "Second client should receive realtime data, got: {output_str}",
         );
     }
     Ok(())
@@ -1065,8 +1065,7 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
     // a reasonable number of health checks occurred without interfering with data transfer.
     assert!(
         health_check_count > 20,
-        "Should have performed multiple health checks (got {})",
-        health_check_count
+        "Should have performed multiple health checks (got {health_check_count})",
     );
 
     // Verify that we received substantial data on both ports despite constant health checks.
@@ -1079,14 +1078,12 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
 
     assert!(
         protocol_line_count >= 250,
-        "Should have received most stdout lines despite health checks (got {})",
-        protocol_line_count
+        "Should have received most stdout lines despite health checks (got {protocol_line_count})",
     );
 
     assert!(
         stderr_line_count >= 250,
-        "Should have received most stderr lines despite health checks (got {})",
-        stderr_line_count
+        "Should have received most stderr lines despite health checks (got {stderr_line_count})",
     );
 
     // Verify data integrity: check for a few specific lines.
@@ -1191,9 +1188,7 @@ fn test_large_output_buffering() -> Result<(), anyhow::Error> {
 
     assert!(
         total_read >= large_size,
-        "Should have read at least {} bytes, got {}",
-        large_size,
-        total_read
+        "Should have read at least {large_size} bytes, got {total_read}",
     );
     Ok(())
 }
@@ -1251,7 +1246,7 @@ fn test_lsp_rust_analyzer_integration() -> Result<(), anyhow::Error> {
         .map_err(|error| anyhow::anyhow!("Failed to get current directory: {error}"))?
         .to_string_lossy()
         .to_string();
-    let root_uri = format!("file://{}", workspace_path);
+    let root_uri = format!("file://{workspace_path}");
 
     let init_response = lsp.initialize(&root_uri)?;
 

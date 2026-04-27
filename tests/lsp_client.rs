@@ -149,20 +149,17 @@ impl LspClient {
                 Err(error)
                     if error
                         .downcast_ref::<io::Error>()
-                        .is_some_and(|io_error| {
-                            io_error.kind() == io::ErrorKind::TimedOut
-                        }) =>
+                        .is_some_and(|io_error| io_error.kind() == io::ErrorKind::TimedOut) =>
                 {
                     thread::sleep(Duration::from_millis(100));
                 }
-                Err(e) => {
-                    return Err(anyhow::anyhow!("Failed to read LSP response: {}", e));
+                Err(error) => {
+                    return Err(anyhow::anyhow!("Failed to read LSP response: {error}"));
                 }
             }
         }
         Err(anyhow::anyhow!(
-            "Did not receive response with id {}",
-            expected_id
+            "Did not receive response with id {expected_id}"
         ))
     }
 

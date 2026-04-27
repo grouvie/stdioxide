@@ -1,7 +1,11 @@
 //! Protocol TCP server for bidirectional `stdin`/`stdout` forwarding.
 
 use std::{
-    fs, io::{Read, Write}, net::{TcpListener, TcpStream}, sync::{Arc, mpsc}, thread
+    fs,
+    io::{Read, Write},
+    net::{TcpListener, TcpStream},
+    sync::{Arc, mpsc},
+    thread,
 };
 
 use tracing::info;
