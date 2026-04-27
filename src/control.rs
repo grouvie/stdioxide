@@ -3,11 +3,11 @@ use std::sync::mpsc;
 use subprocess::Job;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ControlMessage {
+pub(crate) enum ControlMessage {
     KillChild,
 }
 
-pub fn run_child_coordinator(
+pub(crate) fn run_child_coordinator(
     job: Job,
     control_rx: mpsc::Receiver<ControlMessage>,
 ) -> Result<(), anyhow::Error> {

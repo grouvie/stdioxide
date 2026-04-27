@@ -11,23 +11,23 @@ use std::{
 use crate::control::ControlMessage;
 
 #[derive(Debug, Clone)]
-pub enum ServingBehavior {
+pub(crate) enum ServingBehavior {
     KillChildOnDisconnect,
     DoNotKillChildOnDisconnect(Arc<AtomicBool>),
 }
 
-pub struct OutputState {
+pub(crate) struct OutputState {
     pub buffer: Vec<u8>,
     pub eof: bool,
 }
 
-pub struct NotifyableOutputState {
+pub(crate) struct NotifyableOutputState {
     pub state: Mutex<OutputState>,
     pub condition_variable: Condvar,
 }
 
 impl NotifyableOutputState {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self::default()
     }
 }
@@ -45,7 +45,7 @@ impl Default for NotifyableOutputState {
 }
 
 /// Pumps data from the given `source` (either `stdout` or `stderr` of the child process) into the shared `state`.
-pub fn pump_output_to_state(
+pub(crate) fn pump_output_to_state(
     mut source: impl Read,
     output_state: Arc<NotifyableOutputState>,
     label: &'static str,
@@ -73,7 +73,7 @@ pub fn pump_output_to_state(
     Ok(())
 }
 
-pub fn serve_output_on_stream(
+pub(crate) fn serve_output_on_stream(
     mut stream: TcpStream,
     output_state: Arc<NotifyableOutputState>,
     control_tx: mpsc::Sender<ControlMessage>,

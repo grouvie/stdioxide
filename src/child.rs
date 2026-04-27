@@ -1,6 +1,6 @@
 use subprocess::{Exec, Job, Redirection};
 
-pub struct StartedChild {
+pub(crate) struct StartedChild {
     pub job: Job,
     pub stdin: std::fs::File,
     pub stdout: std::fs::File,
@@ -8,7 +8,7 @@ pub struct StartedChild {
 }
 
 impl StartedChild {
-    pub fn start(command: &str, args: &[String]) -> Result<Self, anyhow::Error> {
+    pub(crate) fn start(command: &str, args: &[String]) -> Result<Self, anyhow::Error> {
         let mut process = Exec::cmd(command);
         for arg in args {
             process = process.arg(arg);
