@@ -30,6 +30,10 @@ pub struct LspClient {
 
 impl LspClient {
     /// Create a new LSP client from a TCP stream.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if setting read or write timeouts on the stream fails.
     pub fn new(stream: TcpStream) -> Result<Self, anyhow::Error> {
         // Set reasonable timeouts for LSP communication.
         stream
@@ -163,6 +167,10 @@ impl LspClient {
     }
 
     /// Initialize the LSP server with the given workspace root.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the initialize request fails to send or the response cannot be read.
     pub fn initialize(&mut self, root_uri: &str) -> anyhow::Result<serde_json::Value> {
         let params = serde_json::json!({
             "processId": null,
@@ -200,6 +208,10 @@ impl LspClient {
     }
 
     /// Request document symbols for a file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the document symbol request fails to send or the response cannot be read.
     pub fn document_symbol(&mut self, uri: &str) -> anyhow::Result<serde_json::Value> {
         let params = serde_json::json!({
             "textDocument": {
@@ -212,6 +224,10 @@ impl LspClient {
     }
 
     /// Shutdown the LSP server.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the shutdown request fails to send or the response cannot be read.
     pub fn shutdown(&mut self) -> anyhow::Result<serde_json::Value> {
         let request_id = self.send_request("shutdown", serde_json::json!(null))?;
         self.read_response(request_id)
