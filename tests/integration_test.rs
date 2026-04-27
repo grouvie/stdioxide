@@ -758,15 +758,13 @@ fn test_health_port_multiple_clients() -> Result<(), anyhow::Error> {
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Connect multiple clients to the health port.
-    let _stream1 = forwarder.connect_health()?;
-    let _stream2 = forwarder.connect_health()?;
-    let _stream3 = forwarder.connect_health()?;
+    let stream1 = forwarder.connect_health()?;
+    let stream2 = forwarder.connect_health()?;
+    let stream3 = forwarder.connect_health()?;
 
     // All connections should succeed.
     assert!(
-        _stream1.peer_addr().is_ok()
-            && _stream2.peer_addr().is_ok()
-            && _stream3.peer_addr().is_ok()
+        stream1.peer_addr().is_ok() && stream2.peer_addr().is_ok() && stream3.peer_addr().is_ok()
     );
     Ok(())
 }
