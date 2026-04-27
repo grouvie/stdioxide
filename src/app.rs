@@ -42,9 +42,9 @@ use crate::{
 /// use clap::Parser;
 ///
 /// let args = Args::parse();
-/// app::run(args).expect("Failed to run stdioxide");
+/// app::run(&args).expect("Failed to run stdioxide");
 /// ```
-pub fn run(args: Args) -> Result<(), anyhow::Error> {
+pub fn run(args: &Args) -> Result<(), anyhow::Error> {
     let protocol_listener = TcpListener::bind(("0.0.0.0", args.protocol_port))?;
     let stderr_listener = TcpListener::bind(("0.0.0.0", args.stderr_port))?;
     let health_listener = TcpListener::bind(("0.0.0.0", args.health_port))?;

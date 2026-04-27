@@ -18,7 +18,7 @@
 //! use clap::Parser;
 //!
 //! let args = Args::parse();
-//! app::run(args).expect("Failed to run stdioxide");
+//! app::run(&args).expect("Failed to run stdioxide");
 //! ```
 
 #![allow(

@@ -18,5 +18,5 @@ fn main() -> Result<(), anyhow::Error> {
         .init();
 
     let args = Args::parse();
-    app::run(args)
+    app::run(&args)
 }
