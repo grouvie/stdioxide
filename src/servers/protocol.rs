@@ -7,6 +7,8 @@ use std::{
     thread,
 };
 
+use tracing::info;
+
 use crate::{
     control::ControlMessage,
     output::{NotifyableOutputState, ServingBehavior, serve_output_on_stream},
@@ -25,7 +27,7 @@ fn forward_stream_data_to_child_process(
     loop {
         let num_bytes_read = match stream.read(&mut read_buffer) {
             Ok(0) => {
-                eprintln!("[protocol] client disconnected; terminating child process");
+                info!("[protocol] client disconnected; terminating child process");
                 let _ = control_tx.send(ControlMessage::KillChild);
                 return Ok(());
             }
@@ -61,7 +63,7 @@ pub(crate) fn protocol_server(
     // When the client disconnects, we terminate the child process and exit the server.
     let (stdin_thread, stdout_thread) = match listener.accept() {
         Ok((stream, address)) => {
-            eprintln!("[protocol] client connected from {address}");
+            info!("[protocol] client connected from {address}");
             let cloned_stream = stream.try_clone()?;
             let cloned_control_tx = control_tx.clone();
             (

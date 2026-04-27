@@ -11,6 +11,8 @@ use std::{
     thread,
 };
 
+use tracing::{debug, info, warn};
+
 use crate::{
     control::ControlMessage,
     output::{NotifyableOutputState, ServingBehavior, serve_output_on_stream},
@@ -28,7 +30,7 @@ fn monitor_stderr_client_connection(
         match stream.read(&mut read_buffer) {
             Ok(0) => {
                 // EOF; client disconnected gracefully.
-                eprintln!("[stderr] client disconnect detected");
+                debug!("[stderr] client disconnect detected");
                 has_active_connection.store(false, Ordering::Release);
                 return Ok(());
             }
@@ -37,7 +39,7 @@ fn monitor_stderr_client_connection(
             }
             Err(e) => {
                 // Error reading; treat as disconnection.
-                eprintln!("[stderr] read error (client likely disconnected): {e}");
+                debug!("[stderr] read error (client likely disconnected): {e}");
                 has_active_connection.store(false, Ordering::Release);
                 return Err(anyhow::anyhow!("Failed to read from stderr client: {e}"));
             }
@@ -65,12 +67,12 @@ pub(crate) fn stderr_server(
                     .is_ok()
                 {
                     // Atomic value has been successfully changed from `false` to `true`.
-                    eprintln!("[stderr] client connected from {}", stream.peer_addr()?);
+                    info!("[stderr] client connected from {}", stream.peer_addr()?);
 
                     let connection_monitoring_stream = match stream.try_clone() {
                         Ok(s) => s,
                         Err(e) => {
-                            eprintln!("[stderr] failed to clone stream: {e}");
+                            warn!("[stderr] failed to clone stream: {e}");
                             has_active_connection.store(false, Ordering::Release);
                             continue;
                         }
@@ -107,14 +109,14 @@ pub(crate) fn stderr_server(
                     });
                 } else {
                     // Atomic value was already `true`, so there is already an active connection.
-                    eprintln!(
+                    info!(
                         "[stderr] client connected from {}, but another client is already connected; rejecting connection",
                         stream.peer_addr()?
                     );
                 }
             }
             Err(e) => {
-                eprintln!("[stderr] accept failed: {e}");
+                warn!("[stderr] accept failed: {e}");
             }
         }
     }

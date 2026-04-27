@@ -10,6 +10,8 @@ use std::{
     },
 };
 
+use tracing::{debug, info};
+
 use crate::control::ControlMessage;
 
 /// Defines how output serving should handle client disconnection.
@@ -75,7 +77,7 @@ pub(crate) fn pump_output_to_state(
             .expect("Failed to lock output state");
 
         if num_bytes_read == 0 {
-            eprintln!("[{label}] EOF reached");
+            debug!("[{label}] EOF reached");
             guard.eof = true;
             output_state.condition_variable.notify_all();
             break;
@@ -116,9 +118,7 @@ pub(crate) fn serve_output_on_stream(
             }
 
             if guard.buffer.is_empty() && guard.eof {
-                eprintln!(
-                    "[{label}] EOF reached and no buffered output; closing client connection"
-                );
+                debug!("[{label}] EOF reached and no buffered output; closing client connection");
                 return Ok(());
             }
 
@@ -154,7 +154,7 @@ pub(crate) fn serve_output_on_stream(
         if let ServingBehavior::DoNotKillChildOnDisconnect(ref active) = serving_behavior
             && !active.load(Ordering::Acquire)
         {
-            eprintln!(
+            info!(
                 "[{label}] Connection no longer active (detected by monitoring thread); exiting without draining buffer to prevent data loss"
             );
             return Ok(());
@@ -181,7 +181,7 @@ pub(crate) fn serve_output_on_stream(
         }
 
         if guard.eof && guard.buffer.is_empty() {
-            eprintln!("[{label}] EOF reached; closing client connection");
+            debug!("[{label}] EOF reached; closing client connection");
             return Ok(());
         }
     }

@@ -16,6 +16,8 @@ use clap as _;
 use lsp_types as _;
 use stdioxide as _;
 use subprocess as _;
+use tracing as _;
+use tracing_subscriber as _;
 
 use crate::lsp_client::LspClient;
 

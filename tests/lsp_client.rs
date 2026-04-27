@@ -13,6 +13,8 @@ use clap as _;
 use lsp_types as _;
 use stdioxide as _;
 use subprocess as _;
+use tracing as _;
+use tracing_subscriber as _;
 
 /// RAII wrapper for LSP communication over a TCP stream.
 /// Automatically sends the exit notification when dropped.

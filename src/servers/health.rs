@@ -2,6 +2,8 @@
 
 use std::net::TcpListener;
 
+use tracing::warn;
+
 /// Waits for clients to connect on the `health` port, and immediately drops any connections. The existence
 /// of a successful connection is used by the client as a health check for whether the process is alive.
 pub(crate) fn health_server(listener: TcpListener) -> Result<(), anyhow::Error> {
@@ -11,7 +13,7 @@ pub(crate) fn health_server(listener: TcpListener) -> Result<(), anyhow::Error> 
                 // Immediately drop it; successful connect is enough.
             }
             Err(e) => {
-                eprintln!("[health] accept failed: {e}");
+                warn!("[health] accept failed: {e}");
             }
         }
     }

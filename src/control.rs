@@ -3,6 +3,7 @@
 use std::sync::mpsc;
 
 use subprocess::Job;
+use tracing::info;
 
 /// Messages sent to the child process coordinator to control lifecycle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,7 +22,7 @@ pub(crate) fn run_child_coordinator(
 ) -> Result<(), anyhow::Error> {
     loop {
         if let Some(status) = job.poll() {
-            eprintln!("Child process exited with status: {status}");
+            info!("Child process exited with status: {status}");
             return Ok(());
         }
 
@@ -29,7 +30,7 @@ pub(crate) fn run_child_coordinator(
             Ok(ControlMessage::KillChild) => {
                 drop(job.kill());
                 let status = job.wait()?;
-                eprintln!("Child process killed; exit status: {status}");
+                info!("Child process killed; exit status: {status}");
                 return Ok(());
             }
             Err(mpsc::RecvTimeoutError::Timeout) => {
@@ -37,10 +38,10 @@ pub(crate) fn run_child_coordinator(
             }
             Err(mpsc::RecvTimeoutError::Disconnected) => {
                 // All senders are gone; we terminate the child process and exit.
-                eprintln!("Control channel disconnected; terminating child process");
+                info!("Control channel disconnected; terminating child process");
                 drop(job.kill());
                 let status = job.wait()?;
-                eprintln!("Child process killed; exit status: {status}");
+                info!("Child process killed; exit status: {status}");
                 return Ok(());
             }
         }
