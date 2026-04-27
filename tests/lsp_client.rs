@@ -5,11 +5,11 @@
     reason = "Private test module, but items need `pub` for parent access"
 )]
 
+use core::time::Duration;
 use std::{
     io::{self, Read, Write},
     net::TcpStream,
     thread,
-    time::Duration,
 };
 
 // Acknowledge available dev-dependencies not used in this test file.
