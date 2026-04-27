@@ -103,7 +103,7 @@ impl LspClient {
         params: serde_json::Value,
     ) -> Result<i32, anyhow::Error> {
         let request_id = self.next_request_id;
-        self.next_request_id += 1_i32;
+        self.next_request_id = self.next_request_id.wrapping_add(1_i32);
 
         let request = serde_json::json!({
             "jsonrpc": "2.0",

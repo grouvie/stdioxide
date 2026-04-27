@@ -204,7 +204,7 @@ pub fn cat_cmd() -> (&'static str, Vec<String>) {
 /// Returns a command that reads from `stdin` and echoes to `stdout` (like `cat`).
 #[cfg(not(windows))]
 #[must_use]
-pub fn cat_cmd() -> (&'static str, Vec<String>) {
+pub const fn cat_cmd() -> (&'static str, Vec<String>) {
     ("cat", vec![])
 }
 
@@ -480,13 +480,13 @@ pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) 
 /// Returns the platform-specific Python command name.
 #[cfg(windows)]
 #[must_use]
-pub fn python_cmd() -> &'static str {
+pub const fn python_cmd() -> &'static str {
     "python"
 }
 
 /// Returns the platform-specific Python command name.
 #[cfg(not(windows))]
 #[must_use]
-pub fn python_cmd() -> &'static str {
+pub const fn python_cmd() -> &'static str {
     "python3"
 }
