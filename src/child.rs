@@ -3,7 +3,7 @@
 use subprocess::{Exec, Job, Redirection};
 
 /// A spawned child process with captured `stdin`, `stdout`, and `stderr` streams.
-pub(crate) struct StartedChild {
+pub struct StartedChild {
     /// The subprocess `Job` handle for process lifecycle management.
     pub job: Job,
     /// File handle for writing to the child’s `stdin`.
@@ -18,7 +18,7 @@ impl StartedChild {
     /// Spawns a child process with the given command and arguments.
     ///
     /// All three standard streams (`stdin`, `stdout`, `stderr`) are captured as pipes.
-    pub(crate) fn start(command: &str, args: &[String]) -> Result<Self, anyhow::Error> {
+    pub fn start(command: &str, args: &[String]) -> Result<Self, anyhow::Error> {
         let mut process = Exec::cmd(command);
         for arg in args {
             process = process.arg(arg);
