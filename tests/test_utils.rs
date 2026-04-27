@@ -436,7 +436,7 @@ pub fn echo_args_cmd(args: &[&str]) -> (&'static str, Vec<String>) {
         "echo $@ && sleep 5".to_string(),
         "--".to_string(),
     ];
-    script_args.extend(args.iter().map(|s| s.to_string()));
+    script_args.extend(args.iter().map(ToString::to_string));
     ("bash", script_args)
 }
 

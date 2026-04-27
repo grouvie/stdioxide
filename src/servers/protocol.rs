@@ -33,19 +33,19 @@ fn forward_stream_data_to_child_process(
                 return Ok(());
             }
             Ok(n) => n,
-            Err(e) => {
+            Err(error) => {
                 let _ = control_tx.send(ControlMessage::KillChild);
-                return Err(anyhow::anyhow!("Failed to read from protocol client: {e}"));
+                return Err(anyhow::anyhow!("Failed to read from protocol client: {error}"));
             }
         };
 
-        if let Err(e) = child_stdin.write_all(&read_buffer[..num_bytes_read]) {
+        if let Err(error) = child_stdin.write_all(&read_buffer[..num_bytes_read]) {
             let _ = control_tx.send(ControlMessage::KillChild);
-            return Err(anyhow::anyhow!("Failed to write to child stdin: {e}"));
+            return Err(anyhow::anyhow!("Failed to write to child stdin: {error}"));
         }
-        if let Err(e) = child_stdin.flush() {
+        if let Err(error) = child_stdin.flush() {
             let _ = control_tx.send(ControlMessage::KillChild);
-            return Err(anyhow::anyhow!("Failed to flush child stdin: {e}"));
+            return Err(anyhow::anyhow!("Failed to flush child stdin: {error}"));
         }
     }
 }
@@ -86,8 +86,10 @@ pub(crate) fn protocol_server(
                 }),
             )
         }
-        Err(e) => {
-            return Err(anyhow::anyhow!("Failed to accept client connection: {e}"));
+        Err(error) => {
+            return Err(anyhow::anyhow!(
+                "Failed to accept client connection: {error}"
+            ));
         }
     };
 

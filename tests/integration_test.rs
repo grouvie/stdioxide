@@ -13,6 +13,7 @@ use std::{
     io::{self, Read, Write},
     net::{Shutdown, TcpListener, TcpStream},
     process::{Child, Command, Stdio},
+    string::String,
     sync::{LazyLock, Mutex},
     thread,
     time::Instant,
@@ -171,8 +172,8 @@ impl TestForwarder {
             // Try to start with these ports.
             match Self::try_start_with_ports(command, args, ports) {
                 Ok(forwarder) => return Ok(forwarder),
-                Err(e) => {
-                    last_error = Some(e);
+                Err(error) => {
+                    last_error = Some(error);
                     if attempt < MAX_RETRIES - 1 {
                         // Retry with new ports
                         thread::sleep(Duration::from_millis(100));
@@ -252,8 +253,8 @@ impl TestForwarder {
                 Duration::from_millis(100),
             ) {
                 Ok(_) => return Ok(()),
-                Err(e) => {
-                    last_error = Some(e);
+                Err(error) => {
+                    last_error = Some(error);
                     if attempt < NUM_ATTEMPTS - 1 {
                         thread::sleep(Duration::from_millis(50));
                     }
@@ -290,9 +291,9 @@ impl TestForwarder {
         for attempt in 0..NUM_ATTEMPTS {
             match TcpStream::connect(("127.0.0.1", port)) {
                 Ok(stream) => return Ok(stream),
-                Err(e) if attempt == NUM_ATTEMPTS - 1 => {
+                Err(error) if attempt == NUM_ATTEMPTS - 1 => {
                     return Err(anyhow::anyhow!(
-                        "Failed to connect to {label} port {port} after {NUM_ATTEMPTS} attempts: {e}"
+                        "Failed to connect to {label} port {port} after {NUM_ATTEMPTS} attempts: {error}"
                     ));
                 }
                 Err(_) => {
@@ -342,8 +343,8 @@ fn read_all_available(stream: &mut TcpStream, timeout: Duration) -> Result<Vec<u
         match stream.read(&mut buffer) {
             Ok(0) => break,
             Ok(n) => result.extend_from_slice(&buffer[..n]),
-            Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
-            Err(e) if e.kind() == io::ErrorKind::TimedOut => break,
+            Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
+            Err(error) if error.kind() == io::ErrorKind::TimedOut => break,
             Err(_) => break,
         }
     }
@@ -360,7 +361,7 @@ fn test_forwarder_starts_arbitrary_child_process() -> Result<(), anyhow::Error> 
     // * [x] A standalone forwarder executable can be started that launches an arbitrary child process.
 
     let (cmd, args) = sleep_cmd(5);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // If we got here, the forwarder started successfully.
@@ -375,7 +376,7 @@ fn test_forwarder_passes_arguments_unchanged() -> Result<(), anyhow::Error> {
 
     // Use a command that outputs arguments and then waits, so we have time to connect.
     let (cmd, args) = echo_args_cmd(&["-n", "test", "with spaces", "--flag"]);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     let mut stream = forwarder.connect_protocol()?;
@@ -395,14 +396,14 @@ fn test_child_process_configurable_externally() -> Result<(), anyhow::Error> {
 
     // Test with different commands to verify external configuration works.
     let (cmd1, args1) = echo_with_sleep_cmd("first", 5);
-    let args1_refs: Vec<&str> = args1.iter().map(|s| s.as_str()).collect();
+    let args1_refs: Vec<&str> = args1.iter().map(String::as_str).collect();
     let forwarder1 = TestForwarder::start(cmd1, &args1_refs)?;
     let mut stream1 = forwarder1.connect_protocol()?;
     let output1 = read_all_available(&mut stream1, Duration::from_millis(500))?;
     assert!(String::from_utf8_lossy(&output1).contains("first"));
 
     let (cmd2, args2) = echo_with_sleep_cmd("second", 5);
-    let args2_refs: Vec<&str> = args2.iter().map(|s| s.as_str()).collect();
+    let args2_refs: Vec<&str> = args2.iter().map(String::as_str).collect();
     let forwarder2 = TestForwarder::start(cmd2, &args2_refs)?;
     let mut stream2 = forwarder2.connect_protocol()?;
     let output2 = read_all_available(&mut stream2, Duration::from_millis(500))?;
@@ -416,7 +417,7 @@ fn test_forwarder_exits_when_child_exits() -> Result<(), anyhow::Error> {
 
     // Use a command that runs briefly and then exits.
     let (cmd, args) = short_lived_cmd("test", 0);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let mut forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Connect to protocol port to ensure we’re monitoring the forwarder.
@@ -441,7 +442,7 @@ fn test_forwarder_exposes_three_tcp_ports() -> Result<(), anyhow::Error> {
     //   * [x] a **health port**
 
     let (cmd, args) = sleep_cmd(10);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Verify all three ports are accessible.
@@ -605,7 +606,7 @@ fn test_stdout_sent_over_protocol_port() -> Result<(), anyhow::Error> {
     // * [x] The forwarder sends the child process’s `stdout` stream over the protocol port.
 
     let (cmd, args) = echo_with_sleep_cmd("Hello from stdout", 5);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     let mut stream = forwarder.connect_protocol()?;
@@ -622,7 +623,7 @@ fn test_stdin_received_on_protocol_port() -> Result<(), anyhow::Error> {
     // * [x] Data received on the protocol port is forwarded to the child process’s `stdin` while the connection is active.
 
     let (cmd, args) = cat_cmd();
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     let mut stream = forwarder.connect_protocol()?;
@@ -650,7 +651,7 @@ fn test_stderr_sent_over_stderr_port() -> Result<(), anyhow::Error> {
 
     // Use a `bash` command that writes to `stderr` and then waits.
     let (cmd, args) = stderr_echo_with_sleep_cmd("error message", 5);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
     let mut stream = forwarder.connect_stderr()?;
     let output = read_all_available(&mut stream, Duration::from_millis(500))?;
@@ -665,7 +666,7 @@ fn test_protocol_port_single_client_only() -> Result<(), anyhow::Error> {
     // * [x] The protocol port allows at most one active client connection at a time.
 
     let (cmd, args) = loop_stdin_to_stdout_cmd();
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // First client connects successfully.
@@ -719,7 +720,7 @@ fn test_stderr_port_single_client_only() -> Result<(), anyhow::Error> {
     // * [x] The `stderr` port allows at most one active client connection at a time.
 
     let (cmd, args) = continuous_stderr_loop_cmd();
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // First client connects successfully.
@@ -753,7 +754,7 @@ fn test_health_port_multiple_clients() -> Result<(), anyhow::Error> {
     // * [x] The health port allows multiple simultaneous client connections.
 
     let (cmd, args) = sleep_cmd(10);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Connect multiple clients to the health port.
@@ -779,7 +780,7 @@ fn test_protocol_port_buffered_stdout_replay() -> Result<(), anyhow::Error> {
 
     // Use a script that produces output immediately and then waits.
     let (cmd, args) = multi_echo_stdout_cmd("buffered output", 1.0, "realtime output", 10);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Now connect - buffering ensures we receive output produced before connection.
@@ -803,7 +804,7 @@ fn test_protocol_disconnect_kills_child() -> Result<(), anyhow::Error> {
     // * [x] When a client disconnects from the protocol port, the child process is killed and the forwarder terminates.
 
     let (cmd, args) = sleep_cmd(100);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let mut forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     {
@@ -828,7 +829,7 @@ fn test_stderr_port_buffered_stderr_replay() -> Result<(), anyhow::Error> {
 
     // Use a script that produces `stderr` immediately and then waits.
     let (cmd, args) = multi_echo_stderr_cmd("buffered error", 1.0, "realtime error", 10);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Now connect to `stderr`--buffering ensures we receive output produced before connection.
@@ -853,7 +854,7 @@ fn test_stderr_disconnect_does_not_kill_child() -> Result<(), anyhow::Error> {
     //       process terminate because of that.
 
     let (cmd, args) = sleep_cmd(10);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
     {
         let _stderr_stream = forwarder.connect_stderr();
@@ -884,7 +885,7 @@ fn test_stderr_port_reconnect_continues_from_current_state() -> Result<(), anyho
     // - "while_disconnected" after 3 seconds (buffered while no client connected)
     // - "during_second_connection" after 5 seconds (sent to second client)
     let (cmd, args) = complex_stderr_reconnect_cmd();
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Wait to ensure "before_connection" is buffered.
@@ -945,7 +946,7 @@ fn test_output_buffering_prevents_data_loss() -> Result<(), anyhow::Error> {
 
     // Start a process that produces output immediately.
     let (cmd, args) = combined_output_cmd("stdout message", "stderr message", 10);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Buffering ensures output is captured even if we connect immediately.
@@ -970,7 +971,7 @@ fn test_health_port_indicates_readiness() -> Result<(), anyhow::Error> {
     // * [x] A successful TCP connection to the health port indicates that the forwarder is ready to accept connections and operate normally.
 
     let (cmd, args) = sleep_cmd(10);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // If we can connect to health port, the forwarder is ready.
@@ -990,7 +991,7 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
     // Use a process that produces high-volume output on both `stdout` and `stderr`.
     // Output a unique numbered line every 10ms for 3 seconds (300 lines on each stream).
     let (cmd, args) = numbered_output_loop_cmd(300, 10);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Spawn a thread to continuously perform health checks for 3.5 seconds.
@@ -1020,8 +1021,8 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
             match protocol_stream.read(&mut buffer) {
                 Ok(0) => break,
                 Ok(n) => all_output.extend_from_slice(&buffer[..n]),
-                Err(e) if e.kind() == io::ErrorKind::TimedOut => break,
-                Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
+                Err(error) if error.kind() == io::ErrorKind::TimedOut => break,
+                Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
                 Err(_) => break,
             }
         }
@@ -1041,8 +1042,8 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
             match stderr_stream.read(&mut buffer) {
                 Ok(0) => break,
                 Ok(n) => all_output.extend_from_slice(&buffer[..n]),
-                Err(e) if e.kind() == io::ErrorKind::TimedOut => break,
-                Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
+                Err(error) if error.kind() == io::ErrorKind::TimedOut => break,
+                Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
                 Err(_) => break,
             }
         }
@@ -1105,7 +1106,7 @@ fn test_works_with_various_executables() -> Result<(), anyhow::Error> {
     // Test with `echo` via shell command.
     {
         let (cmd, args) = echo_with_sleep_cmd("test1", 2);
-        let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+        let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
         let forwarder = TestForwarder::start(cmd, &args_refs)?;
         let mut stream = forwarder.connect_protocol()?;
         let output = read_all_available(&mut stream, Duration::from_millis(500))?;
@@ -1115,7 +1116,7 @@ fn test_works_with_various_executables() -> Result<(), anyhow::Error> {
     // Test with another echo.
     {
         let (cmd, args) = echo_with_sleep_cmd("test2", 2);
-        let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+        let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
         let forwarder = TestForwarder::start(cmd, &args_refs)?;
         let mut stream = forwarder.connect_protocol()?;
         let output = read_all_available(&mut stream, Duration::from_millis(500))?;
@@ -1125,7 +1126,7 @@ fn test_works_with_various_executables() -> Result<(), anyhow::Error> {
     // Test with `cat` (interactive).
     {
         let (cmd, args) = cat_cmd();
-        let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+        let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
         let forwarder = TestForwarder::start(cmd, &args_refs)?;
         let mut stream = forwarder.connect_protocol()?;
         stream
@@ -1168,7 +1169,7 @@ fn test_large_output_buffering() -> Result<(), anyhow::Error> {
     // Generate a large output.
     let large_size = 100_000;
     let (cmd, args) = generate_large_output_cmd(large_size);
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
 
     // Wait for output to be generated.
@@ -1200,7 +1201,7 @@ fn test_concurrent_stdin_stdout_bidirectional() -> Result<(), anyhow::Error> {
 
     // Use `cat` which echoes `stdin` to `stdout`.
     let (cmd, args) = cat_cmd();
-    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let forwarder = TestForwarder::start(cmd, &args_refs)?;
     let mut stream = forwarder.connect_protocol()?;
 

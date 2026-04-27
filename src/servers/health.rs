@@ -12,8 +12,8 @@ pub(crate) fn health_server(listener: TcpListener) -> Result<(), anyhow::Error> 
             Ok(_stream) => {
                 // Immediately drop it; successful connect is enough.
             }
-            Err(e) => {
-                warn!("[health] accept failed: {e}");
+            Err(error) => {
+                warn!("[health] accept failed: {error}");
             }
         }
     }

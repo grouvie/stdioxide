@@ -34,11 +34,13 @@ fn monitor_stderr_client_connection(
             Ok(_) => {
                 // Ignore any data sent by client (unexpected but harmless).
             }
-            Err(e) => {
+            Err(error) => {
                 // Error reading; treat as disconnection.
-                debug!("[stderr] read error (client likely disconnected): {e}");
+                debug!("[stderr] read error (client likely disconnected): {error}");
                 has_active_connection.store(false, Ordering::Release);
-                return Err(anyhow::anyhow!("Failed to read from stderr client: {e}"));
+                return Err(anyhow::anyhow!(
+                    "Failed to read from stderr client: {error}"
+                ));
             }
         }
     }
@@ -67,9 +69,9 @@ pub(crate) fn stderr_server(
                     info!("[stderr] client connected from {}", stream.peer_addr()?);
 
                     let connection_monitoring_stream = match stream.try_clone() {
-                        Ok(s) => s,
-                        Err(e) => {
-                            warn!("[stderr] failed to clone stream: {e}");
+                        Ok(stream) => stream,
+                        Err(error) => {
+                            warn!("[stderr] failed to clone stream: {error}");
                             has_active_connection.store(false, Ordering::Release);
                             continue;
                         }
@@ -112,8 +114,8 @@ pub(crate) fn stderr_server(
                     );
                 }
             }
-            Err(e) => {
-                warn!("[stderr] accept failed: {e}");
+            Err(error) => {
+                warn!("[stderr] accept failed: {error}");
             }
         }
     }
