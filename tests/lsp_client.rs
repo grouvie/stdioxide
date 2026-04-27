@@ -6,7 +6,7 @@
 )]
 
 use std::{
-    io::{Read, Write},
+    io::{self, Read, Write},
     net::TcpStream,
     thread,
     time::Duration,
@@ -51,7 +51,7 @@ impl LspClient {
 
     /// Send an LSP message over the stream.
     /// LSP uses JSON-RPC 2.0 with a Content-Length header.
-    fn send_message(&mut self, message: &serde_json::Value) -> std::io::Result<()> {
+    fn send_message(&mut self, message: &serde_json::Value) -> io::Result<()> {
         let json_str = serde_json::to_string(message)?;
         let content = format!("Content-Length: {}\r\n\r\n{}", json_str.len(), json_str);
         self.stream.write_all(content.as_bytes())?;
@@ -148,9 +148,9 @@ impl LspClient {
                 }
                 Err(error)
                     if error
-                        .downcast_ref::<std::io::Error>()
+                        .downcast_ref::<io::Error>()
                         .is_some_and(|io_error| {
-                            io_error.kind() == std::io::ErrorKind::TimedOut
+                            io_error.kind() == io::ErrorKind::TimedOut
                         }) =>
                 {
                     thread::sleep(Duration::from_millis(100));

@@ -6,13 +6,7 @@
 )]
 
 use std::{
-    collections::HashSet,
-    io::{Read, Write},
-    net::{TcpListener, TcpStream},
-    process::{Child, Command, Stdio},
-    sync::{LazyLock, Mutex},
-    thread,
-    time::Duration,
+    collections::HashSet, env, fs::read_to_string, io::{self, Read, Write}, net::{Shutdown, TcpListener, TcpStream}, process::{Child, Command, Stdio}, sync::{LazyLock, Mutex}, thread, time::{Duration, Instant}
 };
 
 // Acknowledge available dev-dependencies not used in this test file.
@@ -212,10 +206,10 @@ impl TestForwarder {
         command: &str,
         args: &[&str],
         ports: &AllocatedPorts,
-    ) -> std::io::Result<Child> {
+    ) -> io::Result<Child> {
         // Get the path to the `stdioxide` binary.
         // In integration tests, we need to use the binary from the target directory.
-        let bin_path = std::env::var("CARGO_BIN_EXE_stdioxide")
+        let bin_path = env::var("CARGO_BIN_EXE_stdioxide")
             .unwrap_or_else(|_| "target/debug/stdioxide".to_string());
 
         let mut cmd = Command::new(&bin_path);
@@ -326,7 +320,7 @@ impl Drop for TestForwarder {
 }
 
 /// Helper function to read from a stream with a timeout.
-fn read_with_timeout(stream: &mut TcpStream, buffer: &mut [u8]) -> std::io::Result<usize> {
+fn read_with_timeout(stream: &mut TcpStream, buffer: &mut [u8]) -> io::Result<usize> {
     stream.set_read_timeout(Some(Duration::from_secs(5)))?;
     stream.read(buffer)
 }
@@ -343,8 +337,8 @@ fn read_all_available(stream: &mut TcpStream, timeout: Duration) -> Result<Vec<u
         match stream.read(&mut buffer) {
             Ok(0) => break,
             Ok(n) => result.extend_from_slice(&buffer[..n]),
-            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
-            Err(e) if e.kind() == std::io::ErrorKind::TimedOut => break,
+            Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
+            Err(e) if e.kind() == io::ErrorKind::TimedOut => break,
             Err(_) => break,
         }
     }
@@ -485,7 +479,7 @@ fn test_default_port_values() -> Result<(), anyhow::Error> {
     }
 
     // Launch `stdioxide` *without* specifying ports to verify it uses the defaults.
-    let bin_path = std::env::var("CARGO_BIN_EXE_stdioxide")
+    let bin_path = env::var("CARGO_BIN_EXE_stdioxide")
         .unwrap_or_else(|_| "target/debug/stdioxide".to_string());
 
     let (sleep_command, sleep_args) = sleep_cmd(10);
@@ -543,7 +537,7 @@ fn test_port_override_via_environment_variables() -> Result<(), anyhow::Error> {
     let custom_health = ports.health_port();
 
     // Launch `stdioxide` with environment variables (NOT command-line args) to test env var override.
-    let bin_path = std::env::var("CARGO_BIN_EXE_stdioxide")
+    let bin_path = env::var("CARGO_BIN_EXE_stdioxide")
         .unwrap_or_else(|_| "target/debug/stdioxide".to_string());
 
     let (sleep_command, sleep_args) = sleep_cmd(10);
@@ -709,7 +703,7 @@ fn test_protocol_port_single_client_only() -> Result<(), anyhow::Error> {
         result.is_err()
             && matches!(
                 result.as_ref().unwrap_err().kind(),
-                std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
             ),
         "Second client should timeout reading (connection never served by protocol server)"
     );
@@ -901,7 +895,7 @@ fn test_stderr_port_reconnect_continues_from_current_state() -> Result<(), anyho
         assert!(output_str.contains("before_connection"));
         assert!(output_str.contains("during_first_connection"));
         // Disconnect now (at ~t=1.0s), before "trigger_disconnect" (at t=1.5s)
-        drop(stream.shutdown(std::net::Shutdown::Both));
+        drop(stream.shutdown(Shutdown::Both));
         drop(stream);
         assert!(
             !output_str.contains("trigger_disconnect"),
@@ -1001,7 +995,7 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
     // Spawn a thread to continuously perform health checks for 3.5 seconds.
     let health_port = forwarder.ports.health_port();
     let health_check_handle = thread::spawn(move || {
-        let start = std::time::Instant::now();
+        let start = Instant::now();
         let mut check_count = 0;
         while start.elapsed() < Duration::from_millis(3500) {
             if TcpStream::connect(("127.0.0.1", health_port)).is_ok() {
@@ -1025,8 +1019,8 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
             match protocol_stream.read(&mut buffer) {
                 Ok(0) => break,
                 Ok(n) => all_output.extend_from_slice(&buffer[..n]),
-                Err(e) if e.kind() == std::io::ErrorKind::TimedOut => break,
-                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+                Err(e) if e.kind() == io::ErrorKind::TimedOut => break,
+                Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
                 Err(_) => break,
             }
         }
@@ -1046,8 +1040,8 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
             match stderr_stream.read(&mut buffer) {
                 Ok(0) => break,
                 Ok(n) => all_output.extend_from_slice(&buffer[..n]),
-                Err(e) if e.kind() == std::io::ErrorKind::TimedOut => break,
-                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+                Err(e) if e.kind() == io::ErrorKind::TimedOut => break,
+                Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
                 Err(_) => break,
             }
         }
@@ -1253,7 +1247,7 @@ fn test_lsp_rust_analyzer_integration() -> Result<(), anyhow::Error> {
     let mut lsp = LspClient::new(stream)?;
 
     // Initialize the LSP server.
-    let workspace_path = std::env::current_dir()
+    let workspace_path = env::current_dir()
         .map_err(|error| anyhow::anyhow!("Failed to get current directory: {error}"))?
         .to_string_lossy()
         .to_string();
@@ -1281,7 +1275,7 @@ fn test_lsp_rust_analyzer_integration() -> Result<(), anyhow::Error> {
     // Open a document (src/main.rs).
     let main_rs_path = format!("{workspace_path}/src/main.rs");
     let main_rs_uri = format!("file://{main_rs_path}");
-    let main_rs_content = std::fs::read_to_string(&main_rs_path)
+    let main_rs_content = read_to_string(&main_rs_path)
         .map_err(|error| anyhow::anyhow!("Failed to read src/main.rs: {error}"))?;
 
     lsp.did_open(&main_rs_uri, "rust", main_rs_content);

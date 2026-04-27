@@ -1,7 +1,7 @@
 //! Output buffering and stream serving logic.
 
 use std::{
-    io::{Read, Write},
+    io::{self, Read, Write},
     net::TcpStream,
     sync::{
         Arc, Condvar, Mutex,
@@ -160,7 +160,7 @@ pub(crate) fn serve_output_on_stream(
                 Ok(n) => {
                     num_bytes_written += n;
                 }
-                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {
+                Err(e) if e.kind() == io::ErrorKind::Interrupted => {
                     // Interrupted by a signal, just retry.
                     continue;
                 }

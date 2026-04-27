@@ -1,10 +1,7 @@
 //! Protocol TCP server for bidirectional `stdin`/`stdout` forwarding.
 
 use std::{
-    io::{Read, Write},
-    net::{TcpListener, TcpStream},
-    sync::{Arc, mpsc},
-    thread,
+    fs, io::{Read, Write}, net::{TcpListener, TcpStream}, sync::{Arc, mpsc}, thread
 };
 
 use tracing::info;
@@ -20,7 +17,7 @@ use crate::{
 /// or an error occurs. Sends a kill signal on disconnection.
 fn forward_stream_data_to_child_process(
     mut stream: TcpStream,
-    mut child_stdin: std::fs::File,
+    mut child_stdin: fs::File,
     control_tx: mpsc::Sender<ControlMessage>,
 ) -> Result<(), anyhow::Error> {
     let mut read_buffer = [0u8; 8192];
@@ -56,7 +53,7 @@ fn forward_stream_data_to_child_process(
 pub(crate) fn protocol_server(
     listener: TcpListener,
     stdout_state: Arc<NotifyableOutputState>,
-    child_stdin: std::fs::File,
+    child_stdin: fs::File,
     control_tx: mpsc::Sender<ControlMessage>,
 ) -> Result<(), anyhow::Error> {
     // We only accept a single (i.e., the first) client connection on the protocol port.

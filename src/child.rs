@@ -1,5 +1,7 @@
 //! Child process spawning and stream capture.
 
+use std::fs;
+
 use subprocess::{Exec, Job, Redirection};
 
 /// A spawned child process with captured `stdin`, `stdout`, and `stderr` streams.
@@ -11,11 +13,11 @@ pub(crate) struct StartedChild {
     /// The subprocess `Job` handle for process lifecycle management.
     pub job: Job,
     /// File handle for writing to the child’s `stdin`.
-    pub stdin: std::fs::File,
+    pub stdin: fs::File,
     /// File handle for reading from the child’s `stdout`.
-    pub stdout: std::fs::File,
+    pub stdout: fs::File,
     /// File handle for reading from the child’s `stderr`.
-    pub stderr: std::fs::File,
+    pub stderr: fs::File,
 }
 
 impl StartedChild {

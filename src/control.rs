@@ -1,6 +1,6 @@
 //! Child process lifecycle coordination and control messages.
 
-use std::sync::mpsc;
+use std::{sync::mpsc, time::Duration};
 
 use subprocess::Job;
 use tracing::info;
@@ -34,7 +34,7 @@ pub(crate) fn run_child_coordinator(
             return Ok(());
         }
 
-        match control_rx.recv_timeout(std::time::Duration::from_millis(100)) {
+        match control_rx.recv_timeout(Duration::from_millis(100)) {
             Ok(ControlMessage::KillChild) => {
                 drop(job.kill());
                 let status = job.wait()?;
