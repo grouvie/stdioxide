@@ -25,6 +25,13 @@
     unused_crate_dependencies,
     reason = "dev-dependencies available to lib tests"
 )]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::panic_in_result_fn,
+        reason = "Using `assert!()`s is idiomatic, but we need to return `Result`s to be able to return I/O-related errors."
+    )
+)]
 
 pub mod app;
 
