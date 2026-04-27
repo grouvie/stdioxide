@@ -7,6 +7,17 @@
 //! The goal is to make integration tests work on all platforms without #[cfg(not(windows))]
 //! guards scattered throughout the test code.
 
+// Acknowledge available dev-dependencies not used in this test file.
+use anyhow as _;
+use clap as _;
+use lsp_types as _;
+use serde_json as _;
+use stdioxide as _;
+use subprocess as _;
+use tracing as _;
+use tracing_subscriber as _;
+
+/// Returns a command that sleeps for the specified number of seconds.
 #[cfg(windows)]
 pub fn sleep_cmd(seconds: u32) -> (&'static str, Vec<String>) {
     // Use ping as a sleep alternative on Windows
@@ -18,11 +29,13 @@ pub fn sleep_cmd(seconds: u32) -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that sleeps for the specified number of seconds.
 #[cfg(not(windows))]
 pub fn sleep_cmd(seconds: u32) -> (&'static str, Vec<String>) {
     ("sleep", vec![seconds.to_string()])
 }
 
+/// Returns a command that echoes text to `stdout`, then sleeps.
 #[cfg(windows)]
 pub fn echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<String>) {
     let pings = seconds + 1;
@@ -35,6 +48,7 @@ pub fn echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<Strin
     )
 }
 
+/// Returns a command that echoes text to `stdout`, then sleeps.
 #[cfg(not(windows))]
 pub fn echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<String>) {
     (
@@ -46,6 +60,7 @@ pub fn echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<Strin
     )
 }
 
+/// Returns a command that echoes text to `stderr`, then sleeps.
 #[cfg(windows)]
 pub fn stderr_echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<String>) {
     let pings = seconds + 1;
@@ -58,6 +73,7 @@ pub fn stderr_echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Ve
     )
 }
 
+/// Returns a command that echoes text to `stderr`, then sleeps.
 #[cfg(not(windows))]
 pub fn stderr_echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<String>) {
     (
@@ -69,6 +85,7 @@ pub fn stderr_echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Ve
     )
 }
 
+/// Returns a command that echoes to `stderr`, sleeps, echoes again, then sleeps more.
 #[cfg(windows)]
 pub fn multi_echo_stderr_cmd(
     buffered: &str,
@@ -91,6 +108,7 @@ pub fn multi_echo_stderr_cmd(
     )
 }
 
+/// Returns a command that echoes to `stderr`, sleeps, echoes again, then sleeps more.
 #[cfg(not(windows))]
 pub fn multi_echo_stderr_cmd(
     buffered: &str,
@@ -110,6 +128,7 @@ pub fn multi_echo_stderr_cmd(
     )
 }
 
+/// Returns a command that echoes to `stdout`, sleeps, echoes again, then sleeps more.
 #[cfg(windows)]
 pub fn multi_echo_stdout_cmd(
     buffered: &str,
@@ -132,6 +151,7 @@ pub fn multi_echo_stdout_cmd(
     )
 }
 
+/// Returns a command that echoes to `stdout`, sleeps, echoes again, then sleeps more.
 #[cfg(not(windows))]
 pub fn multi_echo_stdout_cmd(
     buffered: &str,
@@ -151,6 +171,7 @@ pub fn multi_echo_stdout_cmd(
     )
 }
 
+/// Returns a command that reads from `stdin` and echoes to `stdout` (like `cat`).
 #[cfg(windows)]
 pub fn cat_cmd() -> (&'static str, Vec<String>) {
     // Use Python for reliable line-by-line I/O on Windows.
@@ -165,15 +186,17 @@ pub fn cat_cmd() -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that reads from `stdin` and echoes to `stdout` (like `cat`).
 #[cfg(not(windows))]
 pub fn cat_cmd() -> (&'static str, Vec<String>) {
     ("cat", vec![])
 }
 
+/// Returns a command that continuously reads from `stdin` and writes "response" to `stdout`.
 #[cfg(windows)]
 pub fn loop_stdin_to_stdout_cmd() -> (&'static str, Vec<String>) {
     // PowerShell script that reads line by line and echoes
-    // Use [Console]::In to read from stdin and [Console]::WriteLine() for immediate flushing
+    // Use [Console]::In to read from `stdin` and [Console]::WriteLine() for immediate flushing
     (
         "powershell",
         vec![
@@ -185,6 +208,7 @@ pub fn loop_stdin_to_stdout_cmd() -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that continuously reads from `stdin` and writes "response" to `stdout`.
 #[cfg(not(windows))]
 pub fn loop_stdin_to_stdout_cmd() -> (&'static str, Vec<String>) {
     (
@@ -196,6 +220,7 @@ pub fn loop_stdin_to_stdout_cmd() -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that continuously writes "error" to `stderr` in a loop.
 #[cfg(windows)]
 pub fn continuous_stderr_loop_cmd() -> (&'static str, Vec<String>) {
     (
@@ -209,6 +234,7 @@ pub fn continuous_stderr_loop_cmd() -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that continuously writes "error" to `stderr` in a loop.
 #[cfg(not(windows))]
 pub fn continuous_stderr_loop_cmd() -> (&'static str, Vec<String>) {
     (
@@ -220,6 +246,7 @@ pub fn continuous_stderr_loop_cmd() -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that generates a large block of output (repeated 'A' characters).
 #[cfg(windows)]
 pub fn generate_large_output_cmd(size: usize) -> (&'static str, Vec<String>) {
     // Generate large output using PowerShell
@@ -233,6 +260,7 @@ pub fn generate_large_output_cmd(size: usize) -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that generates a large block of output (repeated 'A' characters).
 #[cfg(not(windows))]
 pub fn generate_large_output_cmd(size: usize) -> (&'static str, Vec<String>) {
     (
@@ -244,6 +272,7 @@ pub fn generate_large_output_cmd(size: usize) -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that outputs numbered lines to both `stdout` and `stderr` with delays.
 #[cfg(windows)]
 pub fn numbered_output_loop_cmd(count: u32, interval_ms: u32) -> (&'static str, Vec<String>) {
     (
@@ -259,6 +288,7 @@ pub fn numbered_output_loop_cmd(count: u32, interval_ms: u32) -> (&'static str, 
     )
 }
 
+/// Returns a command that outputs numbered lines to both `stdout` and `stderr` with delays.
 #[cfg(not(windows))]
 pub fn numbered_output_loop_cmd(count: u32, interval_ms: u32) -> (&'static str, Vec<String>) {
     let interval_sec = interval_ms as f32 / 1000.0;
@@ -273,6 +303,7 @@ pub fn numbered_output_loop_cmd(count: u32, interval_ms: u32) -> (&'static str, 
     )
 }
 
+/// Returns a command that emits timed `stderr` output for testing reconnection scenarios.
 #[cfg(windows)]
 pub fn complex_stderr_reconnect_cmd() -> (&'static str, Vec<String>) {
     (
@@ -291,6 +322,7 @@ pub fn complex_stderr_reconnect_cmd() -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that emits timed `stderr` output for testing reconnection scenarios.
 #[cfg(not(windows))]
 pub fn complex_stderr_reconnect_cmd() -> (&'static str, Vec<String>) {
     (
@@ -309,6 +341,7 @@ pub fn complex_stderr_reconnect_cmd() -> (&'static str, Vec<String>) {
     )
 }
 
+/// Returns a command that outputs to both `stdout` and `stderr`, then sleeps.
 #[cfg(windows)]
 pub fn combined_output_cmd(
     stdout_msg: &str,
@@ -329,6 +362,7 @@ pub fn combined_output_cmd(
     )
 }
 
+/// Returns a command that outputs to both `stdout` and `stderr`, then sleeps.
 #[cfg(not(windows))]
 pub fn combined_output_cmd(
     stdout_msg: &str,
@@ -347,6 +381,7 @@ pub fn combined_output_cmd(
     )
 }
 
+/// Returns a command that echoes all provided arguments to `stdout`.
 #[cfg(windows)]
 pub fn echo_args_cmd(args: &[&str]) -> (&'static str, Vec<String>) {
     let mut cmd_args = vec!["/C".to_string()];
@@ -357,6 +392,7 @@ pub fn echo_args_cmd(args: &[&str]) -> (&'static str, Vec<String>) {
     ("cmd", cmd_args)
 }
 
+/// Returns a command that echoes all provided arguments to `stdout`.
 #[cfg(not(windows))]
 pub fn echo_args_cmd(args: &[&str]) -> (&'static str, Vec<String>) {
     let mut script_args = vec![
@@ -368,6 +404,7 @@ pub fn echo_args_cmd(args: &[&str]) -> (&'static str, Vec<String>) {
     ("bash", script_args)
 }
 
+/// Returns a command that outputs a message and exits quickly after a brief delay.
 #[cfg(windows)]
 pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) {
     (
@@ -383,6 +420,7 @@ pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) 
     )
 }
 
+/// Returns a command that outputs a message and exits quickly after a brief delay.
 #[cfg(not(windows))]
 pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) {
     let sleep_sec = sleep_ms as f32 / 1000.0;
@@ -395,11 +433,13 @@ pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) 
     )
 }
 
+/// Returns the platform-specific Python command name.
 #[cfg(windows)]
 pub fn python_cmd() -> &'static str {
     "python"
 }
 
+/// Returns the platform-specific Python command name.
 #[cfg(not(windows))]
 pub fn python_cmd() -> &'static str {
     "python3"

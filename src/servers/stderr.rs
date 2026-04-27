@@ -1,3 +1,5 @@
+//! `stderr` TCP server with reconnection support and output buffering.
+
 use std::{
     io::Read,
     net::{TcpListener, TcpStream},

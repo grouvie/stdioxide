@@ -1,5 +1,15 @@
 use clap::Parser;
 
+/// Command-line arguments for stdioxide.
+///
+/// Configures the TCP ports and child process to launch. Ports can be specified
+/// via command-line flags or environment variables (flags take precedence).
+///
+/// # Example
+///
+/// ```bash
+/// stdioxide --protocol-port 7000 --stderr-port 7001 --health-port 7002 python script.py --arg1 --arg2
+/// ```
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {

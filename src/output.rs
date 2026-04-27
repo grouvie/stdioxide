@@ -1,3 +1,5 @@
+//! Output buffering and stream serving logic.
+
 use std::{
     io::{Read, Write},
     net::TcpStream,
@@ -10,23 +12,35 @@ use std::{
 
 use crate::control::ControlMessage;
 
+/// Defines how output serving should handle client disconnection.
 #[derive(Debug, Clone)]
 pub(crate) enum ServingBehavior {
+    /// Kill the child process when the client disconnects (protocol port behavior).
     KillChildOnDisconnect,
+    /// Keep child alive on disconnect, allow reconnection (`stderr` port behavior).
+    ///
+    /// The `Arc<AtomicBool>` tracks whether a connection is currently active.
     DoNotKillChildOnDisconnect(Arc<AtomicBool>),
 }
 
+/// Buffered output state from a child process stream.
 pub(crate) struct OutputState {
+    /// Accumulated output bytes not yet sent to clients.
     pub buffer: Vec<u8>,
+    /// Whether EOF has been reached on the source stream.
     pub eof: bool,
 }
 
+/// Thread-safe output state with condition variable for synchronization.
 pub(crate) struct NotifyableOutputState {
+    /// Protected output buffer and EOF flag.
     pub state: Mutex<OutputState>,
+    /// Condition variable to notify waiters when new output arrives.
     pub condition_variable: Condvar,
 }
 
 impl NotifyableOutputState {
+    /// Creates a new empty output state.
     pub(crate) fn new() -> Self {
         Self::default()
     }
@@ -45,6 +59,8 @@ impl Default for NotifyableOutputState {
 }
 
 /// Pumps data from the given `source` (either `stdout` or `stderr` of the child process) into the shared `state`.
+///
+/// Continuously reads from the source and appends to the buffer, notifying waiters on each read.
 pub(crate) fn pump_output_to_state(
     mut source: impl Read,
     output_state: Arc<NotifyableOutputState>,
@@ -73,6 +89,10 @@ pub(crate) fn pump_output_to_state(
     Ok(())
 }
 
+/// Serves output from the shared `state` to the given `stream`.
+///
+/// Waits for output to become available, then writes it to the TCP stream.
+/// Handles disconnection according to the specified `serving_behavior`.
 pub(crate) fn serve_output_on_stream(
     mut stream: TcpStream,
     output_state: Arc<NotifyableOutputState>,

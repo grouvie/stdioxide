@@ -1,3 +1,5 @@
+//! Test utilities for LSP client communication.
+
 use std::{
     io::{Read, Write},
     net::TcpStream,

@@ -1,5 +1,37 @@
+//! A TCP forwarder that exposes a child process’s stdin, stdout, and stderr streams over the network.
+//!
+//! stdioxide launches an arbitrary child process and forwards its standard streams over two TCP ports,
+//! allowing remote interaction with any command-line application. Output is buffered to prevent data
+//! loss when no clients are connected. A third TCP port provides health check functionality for
+//! container orchestrators.
+//!
+//! # Architecture
+//!
+//! - **Protocol Port**: Bidirectional communication for stdin/stdout (single client, kills child on disconnect)
+//! - **Stderr Port**: Reconnectable stderr streaming with buffering (single client, child continues on disconnect)
+//! - **Health Port**: Simple readiness check endpoint
+//!
+//! # Example
+//!
+//! ```no_run
+//! use stdioxide::{app, args::Args};
+//! use clap::Parser;
+//!
+//! let args = Args::parse();
+//! app::run(args).expect("Failed to run stdioxide");
+//! ```
+
+/// Application entry point and main event loop.
+///
+/// Contains the `run()` function that orchestrates TCP listeners, child process management,
+/// and output streaming threads.
 pub mod app;
+
+/// Command-line argument parsing and configuration.
+///
+/// Defines the `Args` struct with port configurations and child process command.
 pub mod args;
+
 mod child;
 mod control;
 mod output;

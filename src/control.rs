@@ -1,12 +1,20 @@
+//! Child process lifecycle coordination and control messages.
+
 use std::sync::mpsc;
 
 use subprocess::Job;
 
+/// Messages sent to the child process coordinator to control lifecycle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ControlMessage {
+    /// Terminate the child process immediately.
     KillChild,
 }
 
+/// Monitors the child process and handles termination requests.
+///
+/// Polls the child process for exit and listens for control messages to kill it.
+/// Returns when the child process exits or is explicitly terminated.
 pub(crate) fn run_child_coordinator(
     job: Job,
     control_rx: mpsc::Receiver<ControlMessage>,

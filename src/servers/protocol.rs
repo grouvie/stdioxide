@@ -1,3 +1,5 @@
+//! Protocol TCP server for bidirectional `stdin`/`stdout` forwarding.
+
 use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
@@ -10,6 +12,10 @@ use crate::{
     output::{NotifyableOutputState, ServingBehavior, serve_output_on_stream},
 };
 
+/// Forwards data from a TCP client stream to the child process’s `stdin`.
+///
+/// Reads from the client and writes to child `stdin` until the client disconnects
+/// or an error occurs. Sends a kill signal on disconnection.
 fn forward_stream_data_to_child_process(
     mut stream: TcpStream,
     mut child_stdin: std::fs::File,

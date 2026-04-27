@@ -1,3 +1,5 @@
+//! Health check TCP server that accepts and immediately drops connections.
+
 use std::net::TcpListener;
 
 /// Waits for clients to connect on the `health` port, and immediately drops any connections. The existence

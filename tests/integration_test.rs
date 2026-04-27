@@ -1,3 +1,5 @@
+//! Integration tests for stdioxide TCP forwarder functionality.
+
 use std::{
     collections::HashSet,
     io::{Read, Write},
