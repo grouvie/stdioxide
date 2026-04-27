@@ -1261,9 +1261,17 @@ fn test_lsp_rust_analyzer_integration() -> Result<(), anyhow::Error> {
 
     let init_response = lsp.initialize(&root_uri)?;
 
-    assert_eq!(init_response["jsonrpc"], "2.0");
+    assert_eq!(
+        init_response
+            .get("jsonrpc")
+            .ok_or_else(|| anyhow::anyhow!("Expected 'jsonrpc' field in initialize response"))?,
+        "2.0"
+    );
     assert!(
-        init_response["result"]["capabilities"].is_object(),
+        init_response
+            .get("result")
+            .and_then(|result| result.get("capabilities"))
+            .is_some_and(serde_json::Value::is_object),
         "Should receive server capabilities"
     );
 
@@ -1281,11 +1289,19 @@ fn test_lsp_rust_analyzer_integration() -> Result<(), anyhow::Error> {
     // Request document symbols.
     let symbols_response = lsp.document_symbol(&main_rs_uri)?;
 
-    assert_eq!(symbols_response["jsonrpc"], "2.0");
+    assert_eq!(
+        symbols_response
+            .get("jsonrpc")
+            .ok_or_else(|| anyhow::anyhow!(
+                "Expected 'jsonrpc' field in document symbol response"
+            ))?,
+        "2.0"
+    );
 
     // Verify we got some symbols (src/main.rs should have at least the main function).
-    let symbols = symbols_response["result"]
-        .as_array()
+    let symbols = symbols_response
+        .get("result")
+        .and_then(|result| result.as_array())
         .ok_or_else(|| anyhow::anyhow!("Expected array of symbols"))?;
 
     assert!(
@@ -1302,7 +1318,12 @@ fn test_lsp_rust_analyzer_integration() -> Result<(), anyhow::Error> {
 
     // Shutdown the LSP server.
     let shutdown_response = lsp.shutdown()?;
-    assert_eq!(shutdown_response["result"], serde_json::Value::Null);
+    assert_eq!(
+        shutdown_response
+            .get("result")
+            .ok_or_else(|| anyhow::anyhow!("Expected 'result' field in shutdown response"))?,
+        &serde_json::Value::Null
+    );
 
     // Exit notification is sent automatically when lsp is dropped.
     drop(lsp);
