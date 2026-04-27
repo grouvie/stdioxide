@@ -87,7 +87,7 @@ pub fn run(args: &Args) -> Result<(), anyhow::Error> {
         let stderr_state = Arc::clone(&stderr_state);
         let control_tx = control_tx.clone();
         thread::spawn(move || {
-            drop(stderr_server(stderr_listener, stderr_state, control_tx));
+            drop(stderr_server(&stderr_listener, &stderr_state, &control_tx));
         });
     }
 

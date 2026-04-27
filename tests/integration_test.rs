@@ -1274,7 +1274,7 @@ fn test_lsp_rust_analyzer_integration() -> Result<(), anyhow::Error> {
     let main_rs_content = read_to_string(&main_rs_path)
         .map_err(|error| anyhow::anyhow!("Failed to read src/main.rs: {error}"))?;
 
-    lsp.did_open(&main_rs_uri, "rust", main_rs_content);
+    lsp.did_open(&main_rs_uri, "rust", &main_rs_content);
 
     // Request document symbols.
     let symbols_response = lsp.document_symbol(&main_rs_uri)?;

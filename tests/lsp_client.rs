@@ -121,7 +121,7 @@ impl LspClient {
     fn send_notification(
         &mut self,
         method: &str,
-        params: serde_json::Value,
+        params: &serde_json::Value,
     ) -> Result<(), anyhow::Error> {
         let notification = serde_json::json!({
             "jsonrpc": "2.0",
@@ -187,11 +187,11 @@ impl LspClient {
 
     /// Send the initialized notification.
     pub fn initialized(&mut self) {
-        drop(self.send_notification("initialized", serde_json::json!({})));
+        drop(self.send_notification("initialized", &serde_json::json!({})));
     }
 
     /// Open a document.
-    pub fn did_open(&mut self, uri: &str, language_id: &str, text: String) {
+    pub fn did_open(&mut self, uri: &str, language_id: &str, text: &str) {
         let params = serde_json::json!({
             "textDocument": {
                 "uri": uri,
@@ -201,7 +201,7 @@ impl LspClient {
             }
         });
 
-        drop(self.send_notification("textDocument/didOpen", params));
+        drop(self.send_notification("textDocument/didOpen", &params));
     }
 
     /// Request document symbols for a file.
