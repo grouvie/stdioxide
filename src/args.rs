@@ -273,7 +273,10 @@ mod tests {
     fn test_missing_command_fails() {
         let env = TestEnv::default();
         let result = Args::try_parse_from_env_and_args(&env, ["stdioxide"]);
-        assert!(result.is_err(), "Expected parsing to fail when command is missing");
+        assert!(
+            result.is_err(),
+            "Expected parsing to fail when command is missing"
+        );
     }
 
     #[test]
