@@ -704,15 +704,17 @@ fn test_protocol_port_single_client_only() -> Result<(), anyhow::Error> {
     let mut buf = [0_u8; 100];
     let result = stream2.read(&mut buf);
 
-    assert!(
-        result.is_err()
-            && matches!(
-                result.as_ref().unwrap_err().kind(),
-                io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
-            ),
-        "Second client should timeout reading (connection never served by protocol server)"
-    );
-    Ok(())
+    if let Err(error) = &result {
+        assert!(
+            error.kind() == io::ErrorKind::WouldBlock || error.kind() == io::ErrorKind::TimedOut,
+            "Second client should timeout reading (connection never served by protocol server)"
+        );
+        Ok(())
+    } else {
+        anyhow::bail!(
+            "Second client should not receive data (connection never served by protocol server)"
+        );
+    }
 }
 
 #[test]
