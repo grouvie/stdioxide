@@ -366,7 +366,7 @@ fn test_forwarder_starts_arbitrary_child_process() -> Result<(), anyhow::Error> 
 
     // If we got here, the forwarder started successfully.
     // The forwarder should be ready (health port should be accessible).
-    assert!(forwarder.connect_health()?.peer_addr().is_ok());
+    forwarder.connect_health()?.peer_addr()?;
     Ok(())
 }
 
@@ -980,11 +980,11 @@ fn test_health_port_indicates_readiness() -> Result<(), anyhow::Error> {
 
     // If we can connect to health port, the forwarder is ready.
     let health_stream = forwarder.connect_health()?;
-    assert!(health_stream.peer_addr().is_ok());
+    health_stream.peer_addr()?;
 
     // And the other ports should also be accessible.
-    assert!(forwarder.connect_protocol()?.peer_addr().is_ok());
-    assert!(forwarder.connect_stderr()?.peer_addr().is_ok());
+    forwarder.connect_protocol()?.peer_addr()?;
+    forwarder.connect_stderr()?.peer_addr()?;
     Ok(())
 }
 

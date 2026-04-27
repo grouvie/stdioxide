@@ -215,30 +215,38 @@ mod tests {
     use std::io::Cursor;
 
     #[test]
-    fn test_pump_output_to_state_empty_input() {
+    fn test_pump_output_to_state_empty_input() -> Result<(), anyhow::Error> {
         let state = Arc::new(NotifyableOutputState::new());
         let input = Cursor::new(Vec::<u8>::new());
 
-        let result = pump_output_to_state(input, Arc::clone(&state), "test");
-        assert!(result.is_ok());
+        pump_output_to_state(input, Arc::clone(&state), "test")?;
 
-        let guard = state.state.lock().unwrap();
+        let guard = state
+            .state
+            .lock()
+            .map_err(|error| anyhow::anyhow!("Failed to lock output state for test: {error}"))?;
         assert!(guard.buffer.is_empty());
         assert!(guard.eof);
+        drop(guard); // Only needed to satisfy Clippy ¯\_(ツ)_/¯
+        Ok(())
     }
 
     #[test]
-    fn test_pump_output_to_state_single_chunk() {
+    fn test_pump_output_to_state_single_chunk() -> Result<(), anyhow::Error> {
         let state = Arc::new(NotifyableOutputState::new());
         let data = b"Hello, World!";
         let input = Cursor::new(data.to_vec());
 
-        let result = pump_output_to_state(input, Arc::clone(&state), "test");
-        assert!(result.is_ok());
+        pump_output_to_state(input, Arc::clone(&state), "test")?;
 
-        let guard = state.state.lock().unwrap();
+        let guard = state
+            .state
+            .lock()
+            .map_err(|error| anyhow::anyhow!("Failed to lock output state for test: {error}"))?;
         assert_eq!(guard.buffer, data);
         assert!(guard.eof);
+        drop(guard); // Only needed to satisfy Clippy ¯\_(ツ)_/¯
+        Ok(())
     }
 
     #[test]
@@ -247,8 +255,7 @@ mod tests {
         let data = vec![0u8; 16384]; // Larger than buffer size (8192).
         let input = Cursor::new(data.clone());
 
-        let result = pump_output_to_state(input, Arc::clone(&state), "test");
-        assert!(result.is_ok());
+        pump_output_to_state(input, Arc::clone(&state), "test")?;
 
         let guard = state
             .state
@@ -256,6 +263,7 @@ mod tests {
             .map_err(|error| anyhow::anyhow!("Failed to lock output state for test: {error}"))?;
         assert_eq!(guard.buffer, data);
         assert!(guard.eof);
+        drop(guard); // Only needed to satisfy Clippy ¯\_(ツ)_/¯
         Ok(())
     }
 }
