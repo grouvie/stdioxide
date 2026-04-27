@@ -182,7 +182,7 @@ impl LspClient {
 
     /// Send the initialized notification.
     pub fn initialized(&mut self) {
-        self.send_notification("initialized", serde_json::json!({}));
+        drop(self.send_notification("initialized", serde_json::json!({})));
     }
 
     /// Open a document.
@@ -196,7 +196,7 @@ impl LspClient {
             }
         });
 
-        self.send_notification("textDocument/didOpen", params);
+        drop(self.send_notification("textDocument/didOpen", params));
     }
 
     /// Request document symbols for a file.
