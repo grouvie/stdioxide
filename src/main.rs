@@ -1,3 +1,12 @@
+//! stdioxide binary entry point.
+//!
+//! Launches the TCP forwarder that exposes a child process’s standard streams over the network.
+
+#![allow(
+    unused_crate_dependencies,
+    reason = "The binary depends on subprocess transitively through the stdioxide library"
+)]
+
 use clap::Parser;
 use stdioxide::{app, args::Args};
 
