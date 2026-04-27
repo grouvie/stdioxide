@@ -106,7 +106,7 @@ pub fn run(args: &Args) -> Result<(), anyhow::Error> {
 
     coordinator_thread
         .join()
-        .expect("Failed to join coordinator thread")?;
+        .map_err(|error| anyhow::anyhow!("Child coordinator thread panicked: {error:?}"))??;
 
     Ok(())
 }

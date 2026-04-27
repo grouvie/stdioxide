@@ -209,16 +209,17 @@ mod tests {
     }
 
     #[test]
-    fn test_default_port_values() {
+    fn test_default_port_values() -> Result<(), anyhow::Error> {
         let env = TestEnv::default();
-        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"]).unwrap();
+        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"])?;
         assert_eq!(args.protocol_port, 7000);
         assert_eq!(args.stderr_port, 7001);
         assert_eq!(args.health_port, 7002);
+        Ok(())
     }
 
     #[test]
-    fn test_custom_port_values_via_args() {
+    fn test_custom_port_values_via_args() -> Result<(), anyhow::Error> {
         let env = TestEnv::default();
         let args = Args::try_parse_from_env_and_args(
             &env,
@@ -232,71 +233,75 @@ mod tests {
                 "8002",
                 "echo",
             ],
-        )
-        .unwrap();
+        )?;
         assert_eq!(args.protocol_port, 8000);
         assert_eq!(args.stderr_port, 8001);
         assert_eq!(args.health_port, 8002);
+        Ok(())
     }
 
     #[test]
-    fn test_command_and_args() {
+    fn test_command_and_args() -> Result<(), anyhow::Error> {
         let env = TestEnv::default();
         let args =
-            Args::try_parse_from_env_and_args(&env, ["stdioxide", "python", "-m", "http.server"])
-                .unwrap();
+            Args::try_parse_from_env_and_args(&env, ["stdioxide", "python", "-m", "http.server"])?;
         assert_eq!(args.command, "python");
         assert_eq!(args.args, vec!["-m", "http.server"]);
+        Ok(())
     }
 
     #[test]
-    fn test_args_with_hyphen_values() {
+    fn test_args_with_hyphen_values() -> Result<(), anyhow::Error> {
         let env = TestEnv::default();
         let args =
-            Args::try_parse_from_env_and_args(&env, ["stdioxide", "myapp", "--flag", "-value"])
-                .unwrap();
+            Args::try_parse_from_env_and_args(&env, ["stdioxide", "myapp", "--flag", "-value"])?;
         assert_eq!(args.command, "myapp");
         assert_eq!(args.args, vec!["--flag", "-value"]);
+        Ok(())
     }
 
     #[test]
-    fn test_empty_args() {
+    fn test_empty_args() -> Result<(), anyhow::Error> {
         let env = TestEnv::default();
-        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"]).unwrap();
+        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"])?;
         assert_eq!(args.command, "echo");
         assert!(args.args.is_empty());
+        Ok(())
     }
 
     #[test]
     fn test_missing_command_fails() {
         let env = TestEnv::default();
         let result = Args::try_parse_from_env_and_args(&env, ["stdioxide"]);
-        assert!(result.is_err());
+        assert!(result.is_err(), "Expected parsing to fail when command is missing");
     }
 
     #[test]
-    fn test_env_var_protocol_port() {
+    fn test_env_var_protocol_port() -> Result<(), anyhow::Error> {
         let env = TestEnv::new([("STDIOXIDE_PROTOCOL_PORT", "9000")]);
-        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"]).unwrap();
+        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"])?;
         assert_eq!(args.protocol_port, 9000);
+        Ok(())
     }
 
     #[test]
-    fn test_env_var_stderr_port() {
+    fn test_env_var_stderr_port() -> Result<(), anyhow::Error> {
         let env = TestEnv::new([("STDIOXIDE_STDERR_PORT", "9001")]);
-        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"]).unwrap();
+        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"])?;
         assert_eq!(args.stderr_port, 9001);
+        Ok(())
     }
 
     #[test]
-    fn test_env_var_health_port() {
+    fn test_env_var_health_port() -> Result<(), anyhow::Error> {
         let env = TestEnv::new([("STDIOXIDE_HEALTH_PORT", "9002")]);
-        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"]).unwrap();
+        let args = Args::try_parse_from_env_and_args(&env, ["stdioxide", "echo"])?;
         assert_eq!(args.health_port, 9002);
+        Ok(())
     }
 
     #[test]
-    fn test_cli_args_override_env_vars() {
+    fn test_cli_args_override_env_vars() -> Result<(), anyhow::Error> {
         let env = TestEnv::new([
             ("STDIOXIDE_PROTOCOL_PORT", "9000"),
             ("STDIOXIDE_STDERR_PORT", "9001"),
@@ -315,11 +320,11 @@ mod tests {
                 "8002",
                 "echo",
             ],
-        )
-        .unwrap();
+        )?;
 
         assert_eq!(args.protocol_port, 8000);
         assert_eq!(args.stderr_port, 8001);
         assert_eq!(args.health_port, 8002);
+        Ok(())
     }
 }

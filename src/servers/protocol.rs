@@ -90,8 +90,12 @@ pub fn protocol_server(
         }
     };
 
-    stdin_thread.join().expect("Failed to join stdin thread");
-    stdout_thread.join().expect("Failed to join stdout thread");
+    stdin_thread
+        .join()
+        .map_err(|error| anyhow::anyhow!("Stdin forwarding thread panicked: {error:?}"))?;
+    stdout_thread
+        .join()
+        .map_err(|error| anyhow::anyhow!("Stdout forwarding thread panicked: {error:?}"))?;
 
     Ok(())
 }

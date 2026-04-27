@@ -25,19 +25,19 @@ pub struct LspClient {
 
 impl LspClient {
     /// Create a new LSP client from a TCP stream.
-    pub fn new(stream: TcpStream) -> Self {
+    pub fn new(stream: TcpStream) -> Result<Self, anyhow::Error> {
         // Set reasonable timeouts for LSP communication.
         stream
             .set_read_timeout(Some(Duration::from_secs(10)))
-            .expect("Failed to set read timeout");
+            .map_err(|error| anyhow::anyhow!("Failed to set read timeout: {error}"))?;
         stream
             .set_write_timeout(Some(Duration::from_secs(5)))
-            .expect("Failed to set write timeout");
+            .map_err(|error| anyhow::anyhow!("Failed to set write timeout: {error}"))?;
 
-        Self {
+        Ok(Self {
             stream,
             next_request_id: 1,
-        }
+        })
     }
 
     /// Send an LSP message over the stream.
@@ -52,7 +52,7 @@ impl LspClient {
 
     /// Read an LSP message from the stream.
     /// Returns the parsed JSON value.
-    fn read_message(&mut self) -> std::io::Result<serde_json::Value> {
+    fn read_message(&mut self) -> anyhow::Result<serde_json::Value> {
         // Read the Content-Length header.
         let mut header = String::new();
         let mut buffer = [0u8; 1];
@@ -66,10 +66,7 @@ impl LspClient {
             }
             // Prevent infinite loops on malformed headers
             if header.len() > 1000 {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    "Header too long",
-                ));
+                return Err(anyhow::anyhow!("Header too long"));
             }
         }
 
@@ -79,9 +76,7 @@ impl LspClient {
             .find(|line| line.starts_with("Content-Length:"))
             .and_then(|line| line.strip_prefix("Content-Length:"))
             .and_then(|len_str| len_str.trim().parse::<usize>().ok())
-            .ok_or_else(|| {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, "Missing Content-Length")
-            })?;
+            .ok_or_else(|| anyhow::anyhow!("Missing Content-Length"))?;
 
         // Read the JSON content.
         let mut content = vec![0u8; content_length];
@@ -93,7 +88,11 @@ impl LspClient {
     }
 
     /// Send an LSP request and return the next request ID to use.
-    fn send_request(&mut self, method: &str, params: serde_json::Value) -> i32 {
+    fn send_request(
+        &mut self,
+        method: &str,
+        params: serde_json::Value,
+    ) -> Result<i32, anyhow::Error> {
         let request_id = self.next_request_id;
         self.next_request_id += 1;
 
@@ -105,12 +104,16 @@ impl LspClient {
         });
 
         self.send_message(&request)
-            .expect("Failed to send LSP request");
-        request_id
+            .map_err(|error| anyhow::anyhow!("Failed to send LSP request: {error}"))?;
+        Ok(request_id)
     }
 
     /// Send an LSP notification (no response expected).
-    fn send_notification(&mut self, method: &str, params: serde_json::Value) {
+    fn send_notification(
+        &mut self,
+        method: &str,
+        params: serde_json::Value,
+    ) -> Result<(), anyhow::Error> {
         let notification = serde_json::json!({
             "jsonrpc": "2.0",
             "method": method,
@@ -118,35 +121,44 @@ impl LspClient {
         });
 
         self.send_message(&notification)
-            .expect("Failed to send LSP notification");
+            .map_err(|error| anyhow::anyhow!("Failed to send LSP notification: {error}"))?;
+        Ok(())
     }
 
     /// Read responses until we get a response with the specified ID.
     /// Skips notifications that may arrive in between.
-    fn read_response(&mut self, expected_id: i32) -> serde_json::Value {
+    fn read_response(&mut self, expected_id: i32) -> anyhow::Result<serde_json::Value> {
         for _ in 0..20 {
             match self.read_message() {
                 Ok(msg) => {
                     // Check if this is our response.
                     if msg.get("id") == Some(&serde_json::json!(expected_id)) {
-                        return msg;
+                        return Ok(msg);
                     }
                     // Otherwise, it's a notification, keep reading.
                 }
-                Err(e) if e.kind() == std::io::ErrorKind::TimedOut => {
+                Err(error)
+                    if error
+                        .downcast_ref::<std::io::Error>()
+                        .is_some_and(|io_error| {
+                            io_error.kind() == std::io::ErrorKind::TimedOut
+                        }) =>
+                {
                     thread::sleep(Duration::from_millis(100));
-                    continue;
                 }
                 Err(e) => {
-                    panic!("Failed to read LSP response: {}", e);
+                    return Err(anyhow::anyhow!("Failed to read LSP response: {}", e));
                 }
             }
         }
-        panic!("Did not receive response with id {}", expected_id);
+        Err(anyhow::anyhow!(
+            "Did not receive response with id {}",
+            expected_id
+        ))
     }
 
     /// Initialize the LSP server with the given workspace root.
-    pub fn initialize(&mut self, root_uri: &str) -> serde_json::Value {
+    pub fn initialize(&mut self, root_uri: &str) -> anyhow::Result<serde_json::Value> {
         let params = serde_json::json!({
             "processId": null,
             "rootUri": root_uri,
@@ -159,7 +171,7 @@ impl LspClient {
             }
         });
 
-        let request_id = self.send_request("initialize", params);
+        let request_id = self.send_request("initialize", params)?;
         self.read_response(request_id)
     }
 
@@ -183,20 +195,20 @@ impl LspClient {
     }
 
     /// Request document symbols for a file.
-    pub fn document_symbol(&mut self, uri: &str) -> serde_json::Value {
+    pub fn document_symbol(&mut self, uri: &str) -> anyhow::Result<serde_json::Value> {
         let params = serde_json::json!({
             "textDocument": {
                 "uri": uri
             }
         });
 
-        let request_id = self.send_request("textDocument/documentSymbol", params);
+        let request_id = self.send_request("textDocument/documentSymbol", params)?;
         self.read_response(request_id)
     }
 
     /// Shutdown the LSP server.
-    pub fn shutdown(&mut self) -> serde_json::Value {
-        let request_id = self.send_request("shutdown", serde_json::json!(null));
+    pub fn shutdown(&mut self) -> anyhow::Result<serde_json::Value> {
+        let request_id = self.send_request("shutdown", serde_json::json!(null))?;
         self.read_response(request_id)
     }
 }

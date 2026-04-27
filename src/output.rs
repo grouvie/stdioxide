@@ -71,20 +71,21 @@ pub(crate) fn pump_output_to_state(
     loop {
         let mut buffer = [0u8; 8192];
         let num_bytes_read = source.read(&mut buffer)?;
-        let mut guard = output_state
-            .state
-            .lock()
-            .expect("Failed to lock output state");
+        {
+            let mut guard = output_state.state.lock().map_err(|error| {
+                anyhow::anyhow!("Failed to lock output state for {label}: {error}")
+            })?;
 
-        if num_bytes_read == 0 {
-            debug!("[{label}] EOF reached");
-            guard.eof = true;
-            output_state.condition_variable.notify_all();
-            break;
+            if num_bytes_read == 0 {
+                debug!("[{label}] EOF reached");
+                guard.eof = true;
+                output_state.condition_variable.notify_all();
+                break;
+            }
+
+            let chunk = &buffer[..num_bytes_read];
+            guard.buffer.extend_from_slice(chunk);
         }
-
-        let chunk = &buffer[..num_bytes_read];
-        guard.buffer.extend_from_slice(chunk);
         output_state.condition_variable.notify_all();
     }
 
@@ -104,17 +105,18 @@ pub(crate) fn serve_output_on_stream(
 ) -> Result<(), anyhow::Error> {
     loop {
         let buffered_data = {
-            let mut guard = output_state
-                .state
-                .lock()
-                .expect("Failed to lock stdout state");
+            let mut guard = output_state.state.lock().map_err(|error| {
+                anyhow::anyhow!("Failed to lock stdout state for {label}: {error}")
+            })?;
 
             while guard.buffer.is_empty() && !guard.eof {
                 // Wait until there’s either new output to send or we’ve reached EOF.
                 guard = output_state
                     .condition_variable
                     .wait(guard)
-                    .expect("Failed to wait on condition variable");
+                    .map_err(|error| {
+                        anyhow::anyhow!("Failed to wait on condition variable for {label}: {error}")
+                    })?;
             }
 
             if guard.buffer.is_empty() && guard.eof {
@@ -163,7 +165,7 @@ pub(crate) fn serve_output_on_stream(
         let mut guard = output_state
             .state
             .lock()
-            .expect("Failed to lock stdout state");
+            .map_err(|error| anyhow::anyhow!("Failed to lock stdout state for {label}: {error}"))?;
 
         // Since we copied the buffer, there may have been new output produced while we were writing to the stream. We
         // only remove the number of bytes that we successfully wrote, so that any new output will still be in the buffer
@@ -220,7 +222,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pump_output_to_state_multiple_chunks() {
+    fn test_pump_output_to_state_multiple_chunks() -> Result<(), anyhow::Error> {
         let state = Arc::new(NotifyableOutputState::new());
         let data = vec![0u8; 16384]; // Larger than buffer size (8192).
         let input = Cursor::new(data.clone());
@@ -228,8 +230,12 @@ mod tests {
         let result = pump_output_to_state(input, Arc::clone(&state), "test");
         assert!(result.is_ok());
 
-        let guard = state.state.lock().unwrap();
+        let guard = state
+            .state
+            .lock()
+            .map_err(|error| anyhow::anyhow!("Failed to lock output state for test: {error}"))?;
         assert_eq!(guard.buffer, data);
         assert!(guard.eof);
+        Ok(())
     }
 }
