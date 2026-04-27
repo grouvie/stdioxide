@@ -479,7 +479,7 @@ fn test_default_port_values() -> Result<(), anyhow::Error> {
         );
         drop(
             TcpListener::bind(format!("127.0.0.1:{port}"))
-                .map_err(|error| anyhow::anyhow!("{error}"))?,
+                .map_err(|error| anyhow::anyhow!("{error_message}: {error}"))?,
         );
         // Port is immediately released here.
     }
