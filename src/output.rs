@@ -96,7 +96,7 @@ pub(crate) fn pump_output_to_state(
                 break;
             }
 
-            let chunk = &buffer[..num_bytes_read];
+            let chunk = buffer.get(..num_bytes_read).unwrap_or_default();
             guard.buffer.extend_from_slice(chunk);
         }
         output_state.condition_variable.notify_all();
@@ -149,7 +149,7 @@ pub(crate) fn serve_output_on_stream(
         let mut num_bytes_written = 0;
 
         while num_bytes_written < buffered_data.len() {
-            match stream.write(&buffered_data[num_bytes_written..]) {
+            match stream.write(buffered_data.get(num_bytes_written..).unwrap_or_default()) {
                 Ok(0) => {
                     // Treat as connection no longer writable.
                     break;

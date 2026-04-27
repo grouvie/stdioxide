@@ -39,7 +39,7 @@ fn forward_stream_data_to_child_process(
             }
         };
 
-        if let Err(error) = child_stdin.write_all(&read_buffer[..num_bytes_read]) {
+        if let Err(error) = child_stdin.write_all(read_buffer.get(..num_bytes_read).unwrap_or_default()) {
             let _ = control_tx.send(ControlMessage::KillChild);
             return Err(anyhow::anyhow!("Failed to write to child stdin: {error}"));
         }

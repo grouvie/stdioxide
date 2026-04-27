@@ -342,7 +342,7 @@ fn read_all_available(stream: &mut TcpStream, timeout: Duration) -> Result<Vec<u
     loop {
         match stream.read(&mut buffer) {
             Ok(0) => break,
-            Ok(n) => result.extend_from_slice(&buffer[..n]),
+            Ok(n) => result.extend_from_slice(buffer.get(..n).unwrap_or_default()),
             Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
             Err(error) if error.kind() == io::ErrorKind::TimedOut => break,
             Err(_) => break,
@@ -1020,7 +1020,7 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
         loop {
             match protocol_stream.read(&mut buffer) {
                 Ok(0) => break,
-                Ok(n) => all_output.extend_from_slice(&buffer[..n]),
+                Ok(n) => all_output.extend_from_slice(buffer.get(..n).unwrap_or_default()),
                 Err(error) if error.kind() == io::ErrorKind::TimedOut => break,
                 Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
                 Err(_) => break,
@@ -1041,7 +1041,7 @@ fn test_health_checks_do_not_interfere() -> Result<(), anyhow::Error> {
         loop {
             match stderr_stream.read(&mut buffer) {
                 Ok(0) => break,
-                Ok(n) => all_output.extend_from_slice(&buffer[..n]),
+                Ok(n) => all_output.extend_from_slice(buffer.get(..n).unwrap_or_default()),
                 Err(error) if error.kind() == io::ErrorKind::TimedOut => break,
                 Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
                 Err(_) => break,
