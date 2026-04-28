@@ -185,7 +185,6 @@ same_name_method = "warn"
 self_named_module_files = "warn"
 str_to_string = "warn"
 string_add = "warn"
-string_to_string = "allow" # Deprecated; keep allowed if older toolchains still mention it.
 unnecessary_self_imports = "warn"
 unseparated_literal_suffix = "warn"
 wildcard_enum_match_arm = "warn"
