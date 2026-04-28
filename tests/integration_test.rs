@@ -470,6 +470,7 @@ fn test_default_port_values() -> Result<(), anyhow::Error> {
     //   * [x] `7000` for the protocol port
     //   * [x] `7001` for the stderr port
     //   * [x] `7002` for the health port
+    const NUM_ATTEMPTS: usize = 30;
 
     // Test setup: Ensure default ports are available.
     // If they’re not, this is an environment issue, not a test failure.
@@ -503,7 +504,6 @@ fn test_default_port_values() -> Result<(), anyhow::Error> {
 
     // Wait for the forwarder to be ready by connecting to the default health port.
     let mut connected = false;
-    const NUM_ATTEMPTS: usize = 30;
     for _ in 0..NUM_ATTEMPTS {
         if TcpStream::connect_timeout(&"127.0.0.1:7002".parse()?, Duration::from_millis(100))
             .is_ok()
@@ -535,6 +535,7 @@ fn test_default_port_values() -> Result<(), anyhow::Error> {
 #[test]
 fn test_port_override_via_environment_variables() -> Result<(), anyhow::Error> {
     // * [x] All three port numbers can be overridden via environment variables.
+    const NUM_ATTEMPTS: usize = 30;
 
     // Allocate unique ports to avoid conflicts.
     let ports = AllocatedPorts::new()?;
@@ -563,7 +564,6 @@ fn test_port_override_via_environment_variables() -> Result<(), anyhow::Error> {
 
     // Wait for the forwarder to be ready by connecting to the custom health port.
     let mut connected = false;
-    const NUM_ATTEMPTS: usize = 30;
     for _ in 0..NUM_ATTEMPTS {
         if TcpStream::connect_timeout(
             &format!("127.0.0.1:{custom_health}").parse()?,
