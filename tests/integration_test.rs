@@ -1151,7 +1151,7 @@ fn test_works_with_various_executables() -> Result<(), anyhow::Error> {
         // Delay to ensure Python has started and produced output.
         thread::sleep(Duration::from_millis(300));
         // Increased timeout to account for Python interpreter startup (especially on Windows).
-        let output = read_all_available(&mut stream, Duration::from_millis(3000))?;
+        let output = read_all_available(&mut stream, Duration::from_secs(3))?;
         assert!(
             String::from_utf8_lossy(&output).contains("test4"),
             "Expected 'test4' in output, got: {:?}",
