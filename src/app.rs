@@ -97,7 +97,7 @@ pub fn run(args: &Args) -> Result<(), anyhow::Error> {
 
     {
         thread::spawn(move || {
-            drop(health_server(&health_listener));
+            health_server(&health_listener);
         });
     }
 
