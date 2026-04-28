@@ -117,10 +117,12 @@ impl AllocatedPorts {
             let mut registry = ALLOCATED_PORTS_REGISTRY.lock().map_err(|error| {
                 anyhow::anyhow!("Failed to lock allocated ports registry: {error}")
             })?;
-            if !registry.contains(&p1) && !registry.contains(&p2) && !registry.contains(&p3) {
+            let ports_are_available = [p1, p2, p3].iter().all(|port| !registry.contains(port));
+            if ports_are_available {
                 registry.insert(p1);
                 registry.insert(p2);
                 registry.insert(p3);
+                drop(registry); // Drop “early” to satisfy Clippy.
 
                 return Ok(Self {
                     protocol_port: p1,
