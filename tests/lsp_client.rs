@@ -100,7 +100,7 @@ impl LspClient {
     fn send_request(
         &mut self,
         method: &str,
-        params: serde_json::Value,
+        params: &serde_json::Value,
     ) -> Result<i32, anyhow::Error> {
         let request_id = self.next_request_id;
         self.next_request_id = self.next_request_id.wrapping_add(1_i32);
@@ -181,7 +181,7 @@ impl LspClient {
             }
         });
 
-        let request_id = self.send_request("initialize", params)?;
+        let request_id = self.send_request("initialize", &params)?;
         self.read_response(request_id)
     }
 
@@ -216,7 +216,7 @@ impl LspClient {
             }
         });
 
-        let request_id = self.send_request("textDocument/documentSymbol", params)?;
+        let request_id = self.send_request("textDocument/documentSymbol", &params)?;
         self.read_response(request_id)
     }
 
@@ -226,7 +226,7 @@ impl LspClient {
     ///
     /// Returns an error if the shutdown request fails to send or the response cannot be read.
     pub fn shutdown(&mut self) -> anyhow::Result<serde_json::Value> {
-        let request_id = self.send_request("shutdown", serde_json::json!(null))?;
+        let request_id = self.send_request("shutdown", &serde_json::json!(null))?;
         self.read_response(request_id)
     }
 }
