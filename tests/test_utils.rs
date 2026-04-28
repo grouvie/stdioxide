@@ -28,10 +28,10 @@ use tracing_subscriber as _;
 pub fn sleep_cmd(seconds: u32) -> (&'static str, Vec<String>) {
     // Use ping as a sleep alternative on Windows
     // Pings localhost N+1 times with 1-second intervals (approximately N seconds total)
-    let pings = seconds + 1;
+    let pings = seconds.saturating_add(1);
     (
         "ping",
-        vec!["-n".to_string(), pings.to_string(), "127.0.0.1".to_string()],
+        vec!["-n".to_owned(), pings.to_string(), "127.0.0.1".to_owned()],
     )
 }
 
@@ -44,13 +44,14 @@ pub fn sleep_cmd(seconds: u32) -> (&'static str, Vec<String>) {
 
 /// Returns a command that echoes text to `stdout`, then sleeps.
 #[cfg(windows)]
+#[must_use]
 pub fn echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<String>) {
-    let pings = seconds + 1;
+    let pings = seconds.saturating_add(1);
     (
         "cmd",
         vec![
-            "/C".to_string(),
-            format!("echo {} && ping -n {} 127.0.0.1 >nul", text, pings),
+            "/C".to_owned(),
+            format!("echo {text} && ping -n {pings} 127.0.0.1 >nul"),
         ],
     )
 }
@@ -61,10 +62,7 @@ pub fn echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<Strin
 pub fn echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<String>) {
     (
         "bash",
-        vec![
-            "-c".to_owned(),
-            format!("echo '{}' && sleep {}", text, seconds),
-        ],
+        vec!["-c".to_owned(), format!("echo '{text}' && sleep {seconds}")],
     )
 }
 
@@ -72,12 +70,12 @@ pub fn echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<Strin
 #[cfg(windows)]
 #[must_use]
 pub fn stderr_echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Vec<String>) {
-    let pings = seconds + 1;
+    let pings = seconds.saturating_add(1);
     (
         "cmd",
         vec![
-            "/C".to_string(),
-            format!("echo {} 1>&2 && ping -n {} 127.0.0.1 >nul", text, pings),
+            "/C".to_owned(),
+            format!("echo {text} 1>&2 && ping -n {pings} 127.0.0.1 >nul"),
         ],
     )
 }
@@ -90,7 +88,7 @@ pub fn stderr_echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Ve
         "bash",
         vec![
             "-c".to_owned(),
-            format!("echo '{}' >&2 && sleep {}", text, seconds),
+            format!("echo '{text}' >&2 && sleep {seconds}"),
         ],
     )
 }
@@ -104,16 +102,14 @@ pub fn multi_echo_stderr_cmd(
     realtime: &str,
     sleep2: u32,
 ) -> (&'static str, Vec<String>) {
-    let sleep1_ms = (sleep1 * 1000.0) as u32;
-    let pings = sleep2 + 1;
+    let pings = sleep2.saturating_add(1);
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
             format!(
-                "[Console]::Error.WriteLine('{}'); Start-Sleep -Milliseconds {}; [Console]::Error.WriteLine('{}'); ping -n {} 127.0.0.1 >$null",
-                buffered, sleep1_ms, realtime, pings
+                "[Console]::Error.WriteLine('{buffered}'); Start-Sleep -Seconds {sleep1}; [Console]::Error.WriteLine('{realtime}'); ping -n {pings} 127.0.0.1 >$null"
             ),
         ],
     )
@@ -132,10 +128,7 @@ pub fn multi_echo_stderr_cmd(
         "bash",
         vec![
             "-c".to_owned(),
-            format!(
-                "echo '{}' >&2; sleep {}; echo '{}' >&2; sleep {}",
-                buffered, sleep1, realtime, sleep2
-            ),
+            format!("echo '{buffered}' >&2; sleep {sleep1}; echo '{realtime}' >&2; sleep {sleep2}"),
         ],
     )
 }
@@ -149,16 +142,14 @@ pub fn multi_echo_stdout_cmd(
     realtime: &str,
     sleep2: u32,
 ) -> (&'static str, Vec<String>) {
-    let sleep1_ms = (sleep1 * 1000.0) as u32;
-    let pings = sleep2 + 1;
+    let pings = sleep2.saturating_add(1);
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
             format!(
-                "Write-Output '{}'; Start-Sleep -Milliseconds {}; Write-Output '{}'; ping -n {} 127.0.0.1 >$null",
-                buffered, sleep1_ms, realtime, pings
+                "Write-Output '{buffered}'; Start-Sleep -Seconds {sleep1}; Write-Output '{realtime}'; ping -n {pings} 127.0.0.1 >$null"
             ),
         ],
     )
@@ -177,10 +168,7 @@ pub fn multi_echo_stdout_cmd(
         "bash",
         vec![
             "-c".to_owned(),
-            format!(
-                "echo '{}'; sleep {}; echo '{}'; sleep {}",
-                buffered, sleep1, realtime, sleep2
-            ),
+            format!("echo '{buffered}'; sleep {sleep1}; echo '{realtime}'; sleep {sleep2}",),
         ],
     )
 }
@@ -194,9 +182,9 @@ pub fn cat_cmd() -> (&'static str, Vec<String>) {
     (
         python_cmd(),
         vec![
-            "-u".to_string(),
-            "-c".to_string(),
-            "import sys; [print(line.rstrip()) for line in sys.stdin]".to_string(),
+            "-u".to_owned(),
+            "-c".to_owned(),
+            "import sys; [print(line.rstrip()) for line in sys.stdin]".to_owned(),
         ],
     )
 }
@@ -217,10 +205,10 @@ pub fn loop_stdin_to_stdout_cmd() -> (&'static str, Vec<String>) {
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
             "while($line = [Console]::In.ReadLine()) { [Console]::WriteLine('response') }"
-                .to_string(),
+                .to_owned(),
         ],
     )
 }
@@ -245,10 +233,10 @@ pub fn continuous_stderr_loop_cmd() -> (&'static str, Vec<String>) {
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
             "while($true) { [Console]::Error.WriteLine('error'); Start-Sleep -Milliseconds 100 }"
-                .to_string(),
+                .to_owned(),
         ],
     )
 }
@@ -274,9 +262,9 @@ pub fn generate_large_output_cmd(size: usize) -> (&'static str, Vec<String>) {
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
-            format!("'A' * {}; ping -n 11 127.0.0.1 >$null", size),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
+            format!("'A' * {size}; ping -n 11 127.0.0.1 >$null"),
         ],
     )
 }
@@ -289,7 +277,7 @@ pub fn generate_large_output_cmd(size: usize) -> (&'static str, Vec<String>) {
         "bash",
         vec![
             "-c".to_owned(),
-            format!("head -c {} /dev/zero | tr '\\0' 'A'; sleep 10", size),
+            format!("head -c {size} /dev/zero | tr '\\0' 'A'; sleep 10"),
         ],
     )
 }
@@ -301,11 +289,10 @@ pub fn numbered_output_loop_cmd(count: u32, interval_ms: u32) -> (&'static str, 
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
             format!(
-                "1..{} | ForEach-Object {{ Write-Output \"stdout_line_$_\"; [Console]::Error.WriteLine(\"stderr_line_$_\"); Start-Sleep -Milliseconds {} }}",
-                count, interval_ms
+                "1..{count} | ForEach-Object {{ Write-Output \"stdout_line_$_\"; [Console]::Error.WriteLine(\"stderr_line_$_\"); Start-Sleep -Milliseconds {interval_ms} }}"
             ),
         ],
     )
@@ -340,15 +327,15 @@ pub fn complex_stderr_reconnect_cmd() -> (&'static str, Vec<String>) {
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
             concat!(
                 "[Console]::Error.WriteLine('before_connection'); Start-Sleep -Milliseconds 500; ",
                 "[Console]::Error.WriteLine('during_first_connection'); Start-Sleep -Milliseconds 1000; ",
                 "[Console]::Error.WriteLine('trigger_disconnect'); Start-Sleep -Milliseconds 1500; ",
                 "[Console]::Error.WriteLine('while_disconnected'); Start-Sleep -Milliseconds 2000; ",
                 "[Console]::Error.WriteLine('during_second_connection'); Start-Sleep -Seconds 10"
-            ).to_string(),
+            ).to_owned(),
         ],
     )
 }
@@ -381,15 +368,14 @@ pub fn combined_output_cmd(
     stderr_msg: &str,
     sleep_sec: u32,
 ) -> (&'static str, Vec<String>) {
-    let pings = sleep_sec + 1;
+    let pings = sleep_sec.saturating_add(1);
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
             format!(
-                "Write-Output '{}'; [Console]::Error.WriteLine('{}'); ping -n {} 127.0.0.1 >$null",
-                stdout_msg, stderr_msg, pings
+                "Write-Output '{stdout_msg}'; [Console]::Error.WriteLine('{stderr_msg}'); ping -n {pings} 127.0.0.1 >$null"
             ),
         ],
     )
@@ -407,10 +393,7 @@ pub fn combined_output_cmd(
         "bash",
         vec![
             "-c".to_owned(),
-            format!(
-                "echo '{}'; echo '{}' >&2; sleep {}",
-                stdout_msg, stderr_msg, sleep_sec
-            ),
+            format!("echo '{stdout_msg}'; echo '{stderr_msg}' >&2; sleep {sleep_sec}"),
         ],
     )
 }
@@ -419,11 +402,11 @@ pub fn combined_output_cmd(
 #[cfg(windows)]
 #[must_use]
 pub fn echo_args_cmd(args: &[&str]) -> (&'static str, Vec<String>) {
-    let mut cmd_args = vec!["/C".to_string()];
+    let mut cmd_args = vec!["/C".to_owned()];
     // Use echo %* to print all arguments on Windows (requires a batch context)
     // Alternative: build the echo command with all args
     let echo_str = args.join(" ");
-    cmd_args.push(format!("echo {} && ping -n 6 127.0.0.1 >nul", echo_str));
+    cmd_args.push(format!("echo {echo_str} && ping -n 6 127.0.0.1 >nul"));
     ("cmd", cmd_args)
 }
 
@@ -447,12 +430,9 @@ pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) 
     (
         "powershell",
         vec![
-            "-NoProfile".to_string(),
-            "-Command".to_string(),
-            format!(
-                "Write-Output '{}'; Start-Sleep -Milliseconds {}",
-                msg, sleep_ms
-            ),
+            "-NoProfile".to_owned(),
+            "-Command".to_owned(),
+            format!("Write-Output '{msg}'; Start-Sleep -Milliseconds {sleep_ms}"),
         ],
     )
 }
@@ -470,10 +450,7 @@ pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) 
     let sleep_arg = format!("{seconds}.{millis:03}");
     (
         "bash",
-        vec![
-            "-c".to_owned(),
-            format!("echo {} && sleep {}", msg, sleep_arg),
-        ],
+        vec!["-c".to_owned(), format!("echo {msg} && sleep {sleep_arg}")],
     )
 }
 
