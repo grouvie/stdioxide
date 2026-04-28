@@ -157,9 +157,8 @@ pub(crate) fn serve_output_on_stream(
                 Ok(n) => {
                     num_bytes_written = num_bytes_written.saturating_add(n);
                 }
-                Err(e) if e.kind() == io::ErrorKind::Interrupted => {
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => {
                     // Interrupted by a signal, just retry.
-                    continue;
                 }
                 Err(_) => {
                     // Any other error is treated as the connection being no longer writable.

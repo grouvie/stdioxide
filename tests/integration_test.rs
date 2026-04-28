@@ -177,7 +177,6 @@ impl TestForwarder {
                     if attempt < MAX_RETRIES - 1 {
                         // Retry with new ports
                         thread::sleep(Duration::from_millis(100));
-                        continue;
                     }
                 }
             }
