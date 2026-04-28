@@ -29,12 +29,12 @@ fn forward_stream_data_to_child_process(
         let num_bytes_read = match stream.read(&mut read_buffer) {
             Ok(0) => {
                 info!("[protocol] client disconnected; terminating child process");
-                let _ = control_tx.send(ControlMessage::KillChild);
+                let _result = control_tx.send(ControlMessage::KillChild);
                 return Ok(());
             }
             Ok(n) => n,
             Err(error) => {
-                let _ = control_tx.send(ControlMessage::KillChild);
+                let _result = control_tx.send(ControlMessage::KillChild);
                 return Err(anyhow::anyhow!(
                     "Failed to read from protocol client: {error}"
                 ));
@@ -44,11 +44,11 @@ fn forward_stream_data_to_child_process(
         if let Err(error) =
             child_stdin.write_all(read_buffer.get(..num_bytes_read).unwrap_or_default())
         {
-            let _ = control_tx.send(ControlMessage::KillChild);
+            let _result = control_tx.send(ControlMessage::KillChild);
             return Err(anyhow::anyhow!("Failed to write to child stdin: {error}"));
         }
         if let Err(error) = child_stdin.flush() {
-            let _ = control_tx.send(ControlMessage::KillChild);
+            let _result = control_tx.send(ControlMessage::KillChild);
             return Err(anyhow::anyhow!("Failed to flush child stdin: {error}"));
         }
     }

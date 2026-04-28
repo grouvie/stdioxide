@@ -196,7 +196,7 @@ pub(crate) fn serve_output_on_stream(
             // We treat this as the connection being no longer writable and exit the loop (and potentially kill the
             // child process, depending on the serving behavior).
             if matches!(serving_behavior, ServingBehavior::KillChildOnDisconnect) {
-                let _ = control_tx.send(ControlMessage::KillChild);
+                let _result = control_tx.send(ControlMessage::KillChild);
             }
             return Ok(());
         }
