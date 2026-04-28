@@ -37,6 +37,7 @@ impl Env for ProcessEnv {
 /// ```
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
+#[non_exhaustive]
 pub struct Args {
     /// The port to use for forwarding stdin and stdout.
     #[arg(long, default_value_t = 7000)]
