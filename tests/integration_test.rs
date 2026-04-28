@@ -272,21 +272,21 @@ impl TestForwarder {
 
     /// Connect to the protocol port.
     fn connect_protocol(&self) -> Result<TcpStream, anyhow::Error> {
-        self.connect_with_retry(self.ports.protocol_port(), "protocol")
+        Self::connect_with_retry(self.ports.protocol_port(), "protocol")
     }
 
     /// Connect to the `stderr` port.
     fn connect_stderr(&self) -> Result<TcpStream, anyhow::Error> {
-        self.connect_with_retry(self.ports.stderr_port(), "stderr")
+        Self::connect_with_retry(self.ports.stderr_port(), "stderr")
     }
 
     /// Connect to the health port.
     fn connect_health(&self) -> Result<TcpStream, anyhow::Error> {
-        self.connect_with_retry(self.ports.health_port(), "health")
+        Self::connect_with_retry(self.ports.health_port(), "health")
     }
 
     /// Connect to a port with retries.
-    fn connect_with_retry(&self, port: u16, label: &str) -> Result<TcpStream, anyhow::Error> {
+    fn connect_with_retry(port: u16, label: &str) -> Result<TcpStream, anyhow::Error> {
         const NUM_ATTEMPTS: usize = 20;
         for attempt in 0..NUM_ATTEMPTS {
             match TcpStream::connect(("127.0.0.1", port)) {
