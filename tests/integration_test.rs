@@ -216,7 +216,7 @@ impl TestForwarder {
         // Get the path to the `stdioxide` binary.
         // In integration tests, we need to use the binary from the target directory.
         let bin_path = env::var("CARGO_BIN_EXE_stdioxide")
-            .unwrap_or_else(|_| "target/debug/stdioxide".to_string());
+            .unwrap_or_else(|_| "target/debug/stdioxide".to_owned());
 
         let mut cmd = Command::new(&bin_path);
         cmd.arg("--protocol-port")
@@ -485,8 +485,8 @@ fn test_default_port_values() -> Result<(), anyhow::Error> {
     }
 
     // Launch `stdioxide` *without* specifying ports to verify it uses the defaults.
-    let bin_path = env::var("CARGO_BIN_EXE_stdioxide")
-        .unwrap_or_else(|_| "target/debug/stdioxide".to_string());
+    let bin_path =
+        env::var("CARGO_BIN_EXE_stdioxide").unwrap_or_else(|_| "target/debug/stdioxide".to_owned());
 
     let (sleep_command, sleep_args) = sleep_cmd(10);
     let mut cmd = Command::new(&bin_path);
@@ -543,8 +543,8 @@ fn test_port_override_via_environment_variables() -> Result<(), anyhow::Error> {
     let custom_health = ports.health_port();
 
     // Launch `stdioxide` with environment variables (NOT command-line args) to test env var override.
-    let bin_path = env::var("CARGO_BIN_EXE_stdioxide")
-        .unwrap_or_else(|_| "target/debug/stdioxide".to_string());
+    let bin_path =
+        env::var("CARGO_BIN_EXE_stdioxide").unwrap_or_else(|_| "target/debug/stdioxide".to_owned());
 
     let (sleep_command, sleep_args) = sleep_cmd(10);
     let mut cmd = Command::new(&bin_path);

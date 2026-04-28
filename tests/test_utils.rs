@@ -89,7 +89,7 @@ pub fn stderr_echo_with_sleep_cmd(text: &str, seconds: u32) -> (&'static str, Ve
     (
         "bash",
         vec![
-            "-c".to_string(),
+            "-c".to_owned(),
             format!("echo '{}' >&2 && sleep {}", text, seconds),
         ],
     )
@@ -131,7 +131,7 @@ pub fn multi_echo_stderr_cmd(
     (
         "bash",
         vec![
-            "-c".to_string(),
+            "-c".to_owned(),
             format!(
                 "echo '{}' >&2; sleep {}; echo '{}' >&2; sleep {}",
                 buffered, sleep1, realtime, sleep2
@@ -176,7 +176,7 @@ pub fn multi_echo_stdout_cmd(
     (
         "bash",
         vec![
-            "-c".to_string(),
+            "-c".to_owned(),
             format!(
                 "echo '{}'; sleep {}; echo '{}'; sleep {}",
                 buffered, sleep1, realtime, sleep2
@@ -232,8 +232,8 @@ pub fn loop_stdin_to_stdout_cmd() -> (&'static str, Vec<String>) {
     (
         "bash",
         vec![
-            "-c".to_string(),
-            "while true; do read line; echo response; done".to_string(),
+            "-c".to_owned(),
+            "while true; do read line; echo response; done".to_owned(),
         ],
     )
 }
@@ -260,8 +260,8 @@ pub fn continuous_stderr_loop_cmd() -> (&'static str, Vec<String>) {
     (
         "bash",
         vec![
-            "-c".to_string(),
-            "while true; do echo error >&2; sleep 0.1; done".to_string(),
+            "-c".to_owned(),
+            "while true; do echo error >&2; sleep 0.1; done".to_owned(),
         ],
     )
 }
@@ -288,7 +288,7 @@ pub fn generate_large_output_cmd(size: usize) -> (&'static str, Vec<String>) {
     (
         "bash",
         vec![
-            "-c".to_string(),
+            "-c".to_owned(),
             format!("head -c {} /dev/zero | tr '\\0' 'A'; sleep 10", size),
         ],
     )
@@ -325,7 +325,7 @@ pub fn numbered_output_loop_cmd(count: u32, interval_ms: u32) -> (&'static str, 
     (
         "bash",
         vec![
-            "-c".to_string(),
+            "-c".to_owned(),
             format!(
                 "for i in {{1..{count}}}; do echo \"stdout_line_$i\"; echo \"stderr_line_$i\" >&2; sleep {interval_sec}; done"
             ),
@@ -360,7 +360,7 @@ pub fn complex_stderr_reconnect_cmd() -> (&'static str, Vec<String>) {
     (
         "bash",
         vec![
-            "-c".to_string(),
+            "-c".to_owned(),
             concat!(
                 "echo 'before_connection' >&2; sleep 0.5; ",
                 "echo 'during_first_connection' >&2; sleep 1; ",
@@ -368,7 +368,7 @@ pub fn complex_stderr_reconnect_cmd() -> (&'static str, Vec<String>) {
                 "echo 'while_disconnected' >&2; sleep 2; ",
                 "echo 'during_second_connection' >&2; sleep 10",
             )
-            .to_string(),
+            .to_owned(),
         ],
     )
 }
@@ -406,7 +406,7 @@ pub fn combined_output_cmd(
     (
         "bash",
         vec![
-            "-c".to_string(),
+            "-c".to_owned(),
             format!(
                 "echo '{}'; echo '{}' >&2; sleep {}",
                 stdout_msg, stderr_msg, sleep_sec
@@ -432,9 +432,9 @@ pub fn echo_args_cmd(args: &[&str]) -> (&'static str, Vec<String>) {
 #[must_use]
 pub fn echo_args_cmd(args: &[&str]) -> (&'static str, Vec<String>) {
     let mut script_args = vec![
-        "-c".to_string(),
-        "echo $@ && sleep 5".to_string(),
-        "--".to_string(),
+        "-c".to_owned(),
+        "echo $@ && sleep 5".to_owned(),
+        "--".to_owned(),
     ];
     script_args.extend(args.iter().map(ToString::to_string));
     ("bash", script_args)
@@ -471,7 +471,7 @@ pub fn short_lived_cmd(msg: &str, sleep_ms: u32) -> (&'static str, Vec<String>) 
     (
         "bash",
         vec![
-            "-c".to_string(),
+            "-c".to_owned(),
             format!("echo {} && sleep {}", msg, sleep_arg),
         ],
     )
