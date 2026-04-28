@@ -83,7 +83,7 @@ pub(crate) fn stderr_server(
                     let has_active_connection_clone = Arc::clone(&has_active_connection);
                     let has_active_connection_monitor = Arc::clone(&has_active_connection);
                     let has_active_connection_write = Arc::clone(&has_active_connection);
-                    let stderr_state = Arc::clone(&stderr_state);
+                    let stderr_state = Arc::clone(stderr_state);
                     let control_tx = control_tx.clone();
 
                     // Spawn read monitoring thread to detect disconnection proactively.
