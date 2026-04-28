@@ -5,7 +5,6 @@
     reason = "Using `assert!()`s is idiomatic, but we need to return `Result`s to be able to return I/O-related errors."
 )]
 
-use core::time::Duration;
 use std::{
     collections::HashSet,
     env,
@@ -13,10 +12,10 @@ use std::{
     io::{self, Read, Write},
     net::{Shutdown, TcpListener, TcpStream},
     process::{Child, Command, Stdio},
-    string::String,
+    //string::String,
     sync::{LazyLock, Mutex},
     thread,
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 // Acknowledge available dev-dependencies not used in this test file.

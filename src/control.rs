@@ -1,7 +1,6 @@
 //! Child process lifecycle coordination and control messages.
 
-use core::time::Duration;
-use std::sync::mpsc;
+use std::{sync::mpsc, time::Duration};
 use subprocess::Job;
 use tracing::info;
 

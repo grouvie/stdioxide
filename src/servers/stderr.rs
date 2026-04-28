@@ -1,10 +1,13 @@
 //! `stderr` TCP server with reconnection support and output buffering.
 
-use core::sync::atomic::{AtomicBool, Ordering};
 use std::{
     io::Read,
     net::{TcpListener, TcpStream},
-    sync::{Arc, mpsc},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+        mpsc,
+    },
     thread,
 };
 

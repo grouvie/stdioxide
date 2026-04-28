@@ -1,10 +1,13 @@
 //! Output buffering and stream serving logic.
 
-use core::sync::atomic::{AtomicBool, Ordering};
 use std::{
     io::{self, Read, Write},
     net::TcpStream,
-    sync::{Arc, Condvar, Mutex, mpsc},
+    sync::{
+        Arc, Condvar, Mutex,
+        atomic::{AtomicBool, Ordering},
+        mpsc,
+    },
 };
 
 use tracing::{debug, info};
