@@ -1148,10 +1148,9 @@ fn test_works_with_various_executables() -> Result<(), anyhow::Error> {
             &["-u", "-c", "import time; print('test4'); time.sleep(2)"],
         )?;
         let mut stream = forwarder.connect_protocol()?;
-        // Delay to ensure Python has started and produced output.
-        thread::sleep(Duration::from_millis(300));
-        // Increased timeout to account for Python interpreter startup (especially on Windows).
-        let output = read_all_available(&mut stream, Duration::from_secs(3))?;
+
+        let read_timeout = Duration::from_secs(3); // Python startup (especially slow on Windows).
+        let output = read_all_available(&mut stream, read_timeout)?;
         assert!(
             String::from_utf8_lossy(&output).contains("test4"),
             "Expected 'test4' in output, got: {:?}",
