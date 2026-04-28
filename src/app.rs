@@ -59,14 +59,14 @@ pub fn run(args: &Args) -> Result<(), anyhow::Error> {
     {
         let stdout_state = Arc::clone(&stdout_state);
         thread::spawn(move || {
-            drop(pump_output_to_state(child.stdout, stdout_state, "stdout"));
+            drop(pump_output_to_state(child.stdout, &stdout_state, "stdout"));
         });
     }
 
     {
         let stderr_state = Arc::clone(&stderr_state);
         thread::spawn(move || {
-            drop(pump_output_to_state(child.stderr, stderr_state, "stderr"));
+            drop(pump_output_to_state(child.stderr, &stderr_state, "stderr"));
         });
     }
 
@@ -75,7 +75,7 @@ pub fn run(args: &Args) -> Result<(), anyhow::Error> {
         let control_tx = control_tx.clone();
         thread::spawn(move || {
             drop(protocol_server(
-                protocol_listener,
+                &protocol_listener,
                 stdout_state,
                 child.stdin,
                 control_tx,
@@ -97,12 +97,12 @@ pub fn run(args: &Args) -> Result<(), anyhow::Error> {
 
     {
         thread::spawn(move || {
-            drop(health_server(health_listener));
+            drop(health_server(&health_listener));
         });
     }
 
     let coordinator_thread: JoinHandle<Result<(), anyhow::Error>> =
-        thread::spawn(move || run_child_coordinator(child.job, control_rx));
+        thread::spawn(move || run_child_coordinator(child.job, &control_rx));
 
     coordinator_thread
         .join()

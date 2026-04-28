@@ -22,7 +22,7 @@ use crate::{
 fn forward_stream_data_to_child_process(
     mut stream: TcpStream,
     mut child_stdin: fs::File,
-    control_tx: mpsc::Sender<ControlMessage>,
+    control_tx: &mpsc::Sender<ControlMessage>,
 ) -> Result<(), anyhow::Error> {
     let mut read_buffer = [0_u8; 8192];
     loop {
@@ -59,7 +59,7 @@ fn forward_stream_data_to_child_process(
 /// the client to the child process’s `stdin`, and another for forwarding data from the child
 /// process’s `stdout` to the client.
 pub(crate) fn protocol_server(
-    listener: TcpListener,
+    listener: &TcpListener,
     stdout_state: Arc<NotifyableOutputState>,
     child_stdin: fs::File,
     control_tx: mpsc::Sender<ControlMessage>,
@@ -76,15 +76,15 @@ pub(crate) fn protocol_server(
                     drop(forward_stream_data_to_child_process(
                         cloned_stream,
                         child_stdin,
-                        cloned_control_tx,
+                        &cloned_control_tx,
                     ));
                 }),
                 thread::spawn(move || {
                     drop(serve_output_on_stream(
                         stream,
-                        Arc::clone(&stdout_state),
-                        control_tx,
-                        ServingBehavior::KillChildOnDisconnect,
+                        &stdout_state,
+                        &control_tx,
+                        &ServingBehavior::KillChildOnDisconnect,
                         "protocol",
                     ));
                 }),

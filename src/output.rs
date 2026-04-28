@@ -81,7 +81,7 @@ impl Default for NotifyableOutputState {
 )]
 pub(crate) fn pump_output_to_state(
     mut source: impl Read,
-    output_state: Arc<NotifyableOutputState>,
+    output_state: &Arc<NotifyableOutputState>,
     label: &'static str,
 ) -> Result<(), anyhow::Error> {
     loop {
@@ -118,9 +118,9 @@ pub(crate) fn pump_output_to_state(
 )]
 pub(crate) fn serve_output_on_stream(
     mut stream: TcpStream,
-    output_state: Arc<NotifyableOutputState>,
-    control_tx: mpsc::Sender<ControlMessage>,
-    serving_behavior: ServingBehavior,
+    output_state: &Arc<NotifyableOutputState>,
+    control_tx: &mpsc::Sender<ControlMessage>,
+    serving_behavior: &ServingBehavior,
     label: &'static str,
 ) -> Result<(), anyhow::Error> {
     loop {
@@ -172,7 +172,7 @@ pub(crate) fn serve_output_on_stream(
 
         // Before draining the buffer, check if the connection is still active (for `stderr` reconnect support).
         // If the read monitoring thread detected a disconnect, we should NOT drain the buffer to prevent data loss.
-        if let ServingBehavior::DoNotKillChildOnDisconnect(ref active) = serving_behavior
+        if let ServingBehavior::DoNotKillChildOnDisconnect(active) = serving_behavior
             && !active.load(Ordering::Acquire)
         {
             info!(
@@ -218,7 +218,7 @@ mod tests {
         let state = Arc::new(NotifyableOutputState::new());
         let input = Cursor::new(Vec::<u8>::new());
 
-        pump_output_to_state(input, Arc::clone(&state), "test")?;
+        pump_output_to_state(input, &state, "test")?;
 
         let guard = state
             .state
@@ -236,7 +236,7 @@ mod tests {
         let data = b"Hello, World!";
         let input = Cursor::new(data.to_vec());
 
-        pump_output_to_state(input, Arc::clone(&state), "test")?;
+        pump_output_to_state(input, &state, "test")?;
 
         let guard = state
             .state
@@ -254,7 +254,7 @@ mod tests {
         let data = vec![0_u8; 16384]; // Larger than buffer size (8192).
         let input = Cursor::new(data.clone());
 
-        pump_output_to_state(input, Arc::clone(&state), "test")?;
+        pump_output_to_state(input, &state, "test")?;
 
         let guard = state
             .state

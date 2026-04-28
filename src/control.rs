@@ -25,7 +25,7 @@ pub(crate) enum ControlMessage {
 )]
 pub(crate) fn run_child_coordinator(
     job: Job,
-    control_rx: mpsc::Receiver<ControlMessage>,
+    control_rx: &mpsc::Receiver<ControlMessage>,
 ) -> Result<(), anyhow::Error> {
     loop {
         if let Some(status) = job.poll() {

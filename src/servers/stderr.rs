@@ -23,7 +23,7 @@ use crate::{
 /// When disconnection is detected, the atomic flag is cleared to allow new connections.
 fn monitor_stderr_client_connection(
     mut stream: TcpStream,
-    has_active_connection: Arc<AtomicBool>,
+    has_active_connection: &Arc<AtomicBool>,
 ) -> Result<(), anyhow::Error> {
     let mut read_buffer = [0_u8; 1];
     loop {
@@ -90,7 +90,7 @@ pub(crate) fn stderr_server(
                     thread::spawn(move || {
                         drop(monitor_stderr_client_connection(
                             connection_monitoring_stream,
-                            has_active_connection_monitor,
+                            &has_active_connection_monitor,
                         ));
                     });
 
@@ -98,9 +98,9 @@ pub(crate) fn stderr_server(
                     thread::spawn(move || {
                         drop(serve_output_on_stream(
                             stream,
-                            stderr_state,
-                            control_tx,
-                            ServingBehavior::DoNotKillChildOnDisconnect(Arc::clone(
+                            &stderr_state,
+                            &control_tx,
+                            &ServingBehavior::DoNotKillChildOnDisconnect(Arc::clone(
                                 &has_active_connection_write,
                             )),
                             "stderr",
