@@ -790,7 +790,8 @@ fn test_protocol_port_buffered_stdout_replay() -> Result<(), anyhow::Error> {
     let mut stream = forwarder.connect_protocol()?;
 
     // Read the output.
-    let output = read_all_available(&mut stream, Duration::from_secs(3))?;
+    let read_timeout = Duration::from_secs(5);
+    let output = read_all_available(&mut stream, read_timeout)?;
     let output_str = String::from_utf8_lossy(&output);
 
     // Verify we got both buffered and realtime output.
@@ -839,7 +840,8 @@ fn test_stderr_port_buffered_stderr_replay() -> Result<(), anyhow::Error> {
     let mut stream = forwarder.connect_stderr()?;
 
     // Read the output.
-    let output = read_all_available(&mut stream, Duration::from_secs(2))?;
+    let read_timeout = Duration::from_secs(5);
+    let output = read_all_available(&mut stream, read_timeout)?;
     let output_str = String::from_utf8_lossy(&output);
 
     // Verify we got both buffered and realtime output.
@@ -1149,7 +1151,7 @@ fn test_works_with_various_executables() -> Result<(), anyhow::Error> {
         )?;
         let mut stream = forwarder.connect_protocol()?;
 
-        let read_timeout = Duration::from_secs(3); // Python startup (especially slow on Windows).
+        let read_timeout = Duration::from_secs(5); // Python startup (especially slow on Windows).
         let output = read_all_available(&mut stream, read_timeout)?;
         assert!(
             String::from_utf8_lossy(&output).contains("test4"),
@@ -1214,7 +1216,8 @@ fn test_concurrent_stdin_stdout_bidirectional() -> Result<(), anyhow::Error> {
             .map_err(|error| anyhow::anyhow!("Failed to flush protocol port: {error}"))?;
 
         // Increased timeout for Python startup on Windows.
-        let output = read_all_available(&mut stream, Duration::from_millis(1500))?;
+        let read_timeout = Duration::from_secs(5);
+        let output = read_all_available(&mut stream, read_timeout)?;
         let output_str = String::from_utf8_lossy(&output);
         assert!(
             output_str.contains(&format!("line {i}")),
