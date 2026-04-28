@@ -24,7 +24,7 @@ pub(crate) enum ControlMessage {
     reason = "Linting conflict with `rustc::unreachable_pub`."
 )]
 pub(crate) fn run_child_coordinator(
-    job: Job,
+    job: &Job,
     control_rx: &mpsc::Receiver<ControlMessage>,
 ) -> Result<(), anyhow::Error> {
     loop {

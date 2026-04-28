@@ -102,7 +102,7 @@ pub fn run(args: &Args) -> Result<(), anyhow::Error> {
     }
 
     let coordinator_thread: JoinHandle<Result<(), anyhow::Error>> =
-        thread::spawn(move || run_child_coordinator(child.job, &control_rx));
+        thread::spawn(move || run_child_coordinator(&child.job, &control_rx));
 
     coordinator_thread
         .join()
